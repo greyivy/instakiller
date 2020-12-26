@@ -1,0 +1,23 @@
+{
+  "name": "mastodon-client",
+  "version": "1.0.0",
+  "description": "a mastodon client",
+  "main": "index.js",
+  "dependencies": {
+    "masto": "^3.6.4",
+    "preact": "^10.5.7"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.12.12",
+    "@blueprintjs/core": "^3.36.0",
+    "@snowpack/plugin-babel": "^2.1.5",
+    "snowpack": "^2.18.5"
+  },
+  "scripts": {
+    "start": "snowpack dev",
+    "build": "snowpack build",
+    "test": "test"
+  },
+  "author": "",
+  "license": "MIT"
+}
