@@ -85,12 +85,10 @@ const Timeline = props => {
         content = parse(status.content)
         media = status.mediaAttachments
         return (
-          
           <Status key={status.id} account={status.account}>
             <MediaRenderer media={media}/>
             <HtmlRenderer tags={content} />
           </Status>
-        
         )
       })}
     </TimeLineWrapper>

@@ -1,3 +1,18 @@
+:root {
+  /* global css variable */
+  /* colors */
+  --black: #1f1f1f;
+  --white: #fff;
+  --bg: #f8f8f8;
+  --borderColor: #6c7188;
+  --shadowColor: #6c7188;
+  --shadow: 0px 0px 2px var(--shadowColor)
+}
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+}
 p {
   font-size: 1.1rem;
 }

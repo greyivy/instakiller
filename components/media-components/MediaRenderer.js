@@ -9,6 +9,9 @@ import {
 
 const MediaWrapper = styled.div`
   max-width:100%;
+  margin: 0 auto;
+  margin-bottom: .5rem;
+  box-shadow: 0px 2.5px 2px -3px var(--shadowColor);
   & > img, & > video {
     max-width: 100%;
   }
