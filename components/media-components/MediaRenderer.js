@@ -3,6 +3,17 @@ import { StatusAudio, StatusGif, StatusImage, StatusVideo } from './StatusMedia'
 
 import styled from 'styled-components'
 
+const MediaWrapper = styled.div`
+  max-width: 100%;
+  margin: 0 auto;
+  margin-bottom: 0.5rem;
+  box-shadow: 0px 2.5px 2px -3px var(--shadowColor);
+  & > img,
+  & > video {
+    max-width: 100%;
+  }
+`
+
 const attTypeMap = {
   image: StatusImage,
   video: StatusVideo,

@@ -4,8 +4,11 @@ import styled from 'styled-components'
 const StatusWrapper = styled.div`
   width: 100%;
   height: auto;
-  margin: 8px;
-  margin-bottom: 2rem;
+  margin: 8px auto;
+  margin-bottom: 1rem;
+  background: var(--white);
+  border-radius: 5px;
+  box-shadow: var(--shadow);
   & > hr {
     margin: 1rem 0;
   }
@@ -14,42 +17,49 @@ const StatusHeader = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px;
+  padding: 8px;
   margin: 0;
-  margin-bottom: 1rem;
+  margin-bottom: .5rem;
+  box-shadow: 0px 2.5px 2px -3px var(--shadowColor);
   & > a {
-    font-size: 2rem;
+    font-size: 1.2rem;
     color: black;
     margin: 0;
   }
 `
 
 const Avatar = styled.div`
-  width: 75px;
-  height: 75px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   overflow: hidden;
-  & > img {
+  & img {
     width: 100%;
     height: auto;  
   }
 `
 
-const Status = (props) => {
+const ContentWrapper = styled.div`
+  width: 100%;
+  padding: .75rem;
+`
+
+const Status = props => {
   const { account } = props
-  const { username, url, avatar, bot,  } = account
+  const { username, url, avatarStatic, bot } = account
   return (
     <StatusWrapper>
       <StatusHeader>
         <Avatar>
-          <img src={avatar} alt={username + 's avatar'}/>
+          <a href={url}>
+            <img src={avatarStatic} alt={username + 's avatar'}/>
+          </a>
         </Avatar>
-        <a href={url}>{username}</a>
+        <a href={url}>{'@' + username}</a>
       </StatusHeader>
-      <div>
+      <ContentWrapper>
         {props.children}
-      </div>
-      <hr/>
+      </ContentWrapper>
     </StatusWrapper>
   )
 }
