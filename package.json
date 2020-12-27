@@ -5,9 +5,8 @@
   "main": "index.js",
   "dependencies": {
     "masto": "^3.6.4",
-    "preact": "^10.5.7"
-  },
-  "devDependencies": {
+    "preact": "^10.5.7",
+    "html-dom-parser": "^1.0.0",
     "@babel/plugin-transform-react-jsx": "^7.12.12",
     "@blueprintjs/core": "^3.36.0",
     "@snowpack/plugin-babel": "^2.1.5",
@@ -21,3 +20,4 @@
   "author": "",
   "license": "MIT"
 }
+,
