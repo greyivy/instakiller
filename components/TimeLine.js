@@ -12,6 +12,7 @@ import { useEffect, useState } from 'preact/hooks'
 import parse from 'html-dom-parser'
 import styled from 'styled-components'
 
+import Status from './Status'
 import MediaRenderer from './media-components/MediaRenderer'
 
 
@@ -84,14 +85,12 @@ const Timeline = props => {
         content = parse(status.content)
         media = status.mediaAttachments
         return (
-          <Callout
-            key={status.id}
-            title={status.account.username}
-            style={{ margin: 8 }}
-          >
+          
+          <Status key={status.id} account={status.account}>
             <MediaRenderer media={media}/>
             <HtmlRenderer tags={content} />
-          </Callout>
+          </Status>
+        
         )
       })}
     </TimeLineWrapper>
