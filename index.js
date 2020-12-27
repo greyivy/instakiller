@@ -1,4 +1,5 @@
 import { Component, h, render } from 'preact'
+import 'preact/debug'
 
 import App from './App'
 import { MastodonInstanceWrapper } from './mastodon'
