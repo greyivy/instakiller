@@ -1,17 +1,29 @@
-import { Component, createContext, createElement, h, render } from 'preact'
+import { Button, Intent, NonIdealState } from '@blueprintjs/core'
+import {
+  Component,
+  Fragment,
+  createContext,
+  createElement,
+  h,
+  render
+} from 'preact'
 import { useEffect, useState } from 'preact/hooks'
 
+import CenteredSpinner from './components/CenteredSpinner'
 import { Masto } from 'masto'
-import { Spinner } from '@blueprintjs/core'
+import toaster from './components/toaster'
 
 const MastodonInstance = createContext(null)
 
 const MastodonInstanceWrapper = props => {
-  const { uri, accessToken, onError } = props
+  const { uri, accessToken } = props
 
+  const [error, setError] = useState(null)
   const [value, setValue] = useState(null)
 
   const login = async () => {
+    setError(null)
+
     try {
       const masto = await Masto.login({
         uri,
@@ -19,10 +31,10 @@ const MastodonInstanceWrapper = props => {
       })
 
       const user = await masto.verifyCredentials()
-
       setValue({ masto, user })
     } catch (e) {
-      onError && onError(e)
+      toaster.show({ message: e.message, intent: Intent.DANGER })
+      setError(e)
     }
   }
 
@@ -32,8 +44,28 @@ const MastodonInstanceWrapper = props => {
     return () => setValue(null)
   }, [uri, accessToken])
 
+  if (error) {
+    return (
+      <NonIdealState
+        icon='error'
+        title='Error connecting to instance'
+        description='Please check your credentials and verify that the instance is up'
+        action={
+          <>
+            <Button intent={Intent.PRIMARY} onClick={() => login()}>
+              Try again
+            </Button>
+            <a href={uri} target='_blank' rel='noopener'>
+              View instance
+            </a>
+          </>
+        }
+      />
+    )
+  }
+
   if (!value) {
-    return <Spinner />
+    return <CenteredSpinner />
   }
 
   return (
