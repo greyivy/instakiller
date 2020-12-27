@@ -21,7 +21,6 @@ const StatusHeader = styled.header`
   justify-content: space-between;
   padding: 8px;
   margin: 0;
-  margin-bottom: 0.5rem;
   box-shadow: 0px 2.5px 2px -3px var(--shadowColor);
   & > a {
     font-size: 1.2rem;
@@ -43,7 +42,6 @@ const Avatar = styled.div`
 
 const ContentWrapper = styled.div`
   width: 100%;
-  padding: 0.75rem;
 `
 
 const Status = props => {

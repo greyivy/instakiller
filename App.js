@@ -7,7 +7,7 @@ import {
   PanelStack,
   Spinner
 } from '@blueprintjs/core'
-import { Component, h, render } from 'preact'
+import { Component, Fragment, h, render } from 'preact'
 import { MastodonInstance, MastodonInstanceWrapper } from './mastodon'
 import { useContext, useEffect, useMemo, useState } from 'preact/hooks'
 
@@ -25,7 +25,7 @@ const routes = [
     component: Timeline
   },
   {
-    path: '/user/:userId',
+    path: '/user/:userId?',
     component: Timeline,
     props: {
       type: 'user'
@@ -70,12 +70,15 @@ function App (props) {
         setPanels([...panels, panel])
       } else if (action === Action.Pop) {
         if (panels.length > 1) {
-          setPanels(panels.slice(1))
+          setPanels(panels.slice(0, panels.length - 1))
+        } else {
+          setPanels([panel])
         }
       } else if (action === Action.Replace) {
         setPanels([panel])
       }
-      console.log(action, location.pathname, location.state, panels)
+
+      console.log('router', action, location.pathname, location.state, panels)
     })
 
     return () => unlisten()
@@ -85,18 +88,25 @@ function App (props) {
     history.replace('/')
   }
 
+  const { user } = useContext(MastodonInstance)
+
   return (
     <Wrapper>
       <Navbar>
         <Navbar.Group align={Alignment.LEFT}>
-          <Navbar.Heading>Mastogram</Navbar.Heading>
+          <Navbar.Heading onClick={() => home()}>Mastogram</Navbar.Heading>
           <Navbar.Divider />
-          <Button
-            className='bp3-minimal'
-            icon='home'
-            text='Back'
-            onClick={() => history.back()}
-          />
+          {panels.length > 1 && (
+            <>
+              <Button
+                className='bp3-minimal'
+                icon='arrow-left'
+                text='Back'
+                onClick={() => history.back()}
+              />
+              <Navbar.Divider />
+            </>
+          )}
           <Button
             className='bp3-minimal'
             icon='home'
@@ -105,22 +115,22 @@ function App (props) {
           />
           <Button
             className='bp3-minimal'
-            icon='home'
+            icon='people'
             text='Local'
-            onClick={() => history.push('/timeline/local')}
+            onClick={() => history.replace('/timeline/local')}
           />
           <Button
             className='bp3-minimal'
-            icon='home'
+            icon='globe-network'
             text='Federated'
-            onClick={() => history.push('/timeline/federated')}
+            onClick={() => history.replace('/timeline/federated')}
           />
 
           <Button
             className='bp3-minimal'
-            icon='home'
-            text='Mine'
-            onClick={() => history.push('/timeline/user')}
+            icon='user'
+            text={user.username}
+            onClick={() => history.replace('/user')}
           />
         </Navbar.Group>
       </Navbar>
