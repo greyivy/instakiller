@@ -5,11 +5,12 @@ import {
   InfiniteLoader,
   List
 } from 'react-virtualized'
+import { Button, Intent, NonIdealState, Spinner } from '@blueprintjs/core'
 import { Component, Fragment, createElement, h } from 'preact'
 import { useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 
+import CenteredSpinner from './CenteredSpinner'
 import HtmlRenderer from './HtmlRenderer'
-import { Intent } from '@blueprintjs/core'
 import { MastodonInstance } from '../mastodon'
 import MediaRenderer from './media-components/MediaRenderer'
 import Status from './Status'
@@ -25,6 +26,7 @@ const CaptionWrapper = styled.div`
 `
 
 const VirtualizedTimeline = props => {
+  const [error, setError] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(false)
   const [statuses, setStatuses] = useState([])
@@ -69,6 +71,7 @@ const VirtualizedTimeline = props => {
     if (clear) {
       setStatuses([])
     }
+    setError(null)
     setHasMore(false)
     setIsLoading(true)
 
@@ -92,11 +95,13 @@ const VirtualizedTimeline = props => {
     } catch (e) {
       console.error(e)
       toaster.show({ message: e.message, intent: Intent.DANGER })
+      setError(e)
     } finally {
       setIsLoading(false)
     }
   }
 
+  // TODO accessibility https://github.com/bvaughn/react-virtualized/blob/master/docs/ArrowKeyStepper.md
   return (
     <>
       {/* {type === 'user' && <>USER HEADER HERE</>} */}
@@ -115,6 +120,30 @@ const VirtualizedTimeline = props => {
                 width={width}
                 height={height}
                 rowHeight={cache.rowHeight}
+                noRowsRenderer={() =>
+                  isLoading ? (
+                    <CenteredSpinner />
+                  ) : error ? (
+                    <NonIdealState
+                      icon='error'
+                      title='Error fetching timeline'
+                      action={
+                        <Button
+                          intent={Intent.PRIMARY}
+                          onClick={() => load(true)}
+                        >
+                          Try again
+                        </Button>
+                      }
+                    />
+                  ) : (
+                    <NonIdealState
+                      icon='clean'
+                      title='Looking a little empty here…'
+                      description='No statuses'
+                    />
+                  )
+                }
                 rowRenderer={({ index, key, style, parent }) => {
                   const { account, content, mediaAttachments } = statuses[index]
 
