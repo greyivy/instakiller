@@ -1,10 +1,18 @@
-import { h, Component } from 'preact';
+import { h, Component, createElement, render } from 'preact';
+import styled from 'styled-components'
 import { 
   StatusImage, 
   StatusVideo, 
   StatusAudio, 
   StatusGif 
 } from './StatusMedia'
+
+const MediaWrapper = styled.div`
+  max-width:100%;
+  & > img, & > video {
+    max-width: 100%;
+  }
+`
 
 const attTypeMap = {
   image: StatusImage,
@@ -14,19 +22,23 @@ const attTypeMap = {
   unknown: null,
 }
 
-export default const MediaRenderer = (props) => {
+const MediaRenderer = props => {
   const { media } = props
 
 
   return (
+    <MediaWrapper>
     {
       media.map(att => {
         if(attTypeMap[att.type]){
-          return createElement(attTypeMap[att.type], {media: media, key: media.id})
+          return createElement(attTypeMap[att.type], {media: att, key: att.id})
         } else { 
           return null 
         }
       })
     }
+    </MediaWrapper>
   )
 }
+
+export default MediaRenderer
