@@ -4,9 +4,7 @@
   "description": "a mastodon client",
   "main": "index.js",
   "dependencies": {
-    "@babel/plugin-transform-react-jsx": "^7.12.12",
     "@blueprintjs/core": "^3.36.0",
-    "@snowpack/plugin-babel": "^2.1.5",
     "history": "^5.0.0",
     "html-dom-parser": "^1.0.0",
     "masto": "^3.6.4",
@@ -22,5 +20,11 @@
     "test": "test"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@snowpack/plugin-babel": "^2.1.5",
+    "@babel/plugin-transform-react-jsx": "^7.12.12",
+    "@prefresh/babel-plugin": "^0.4.0",
+    "@prefresh/snowpack": "^3.0.0"
+  }
 }

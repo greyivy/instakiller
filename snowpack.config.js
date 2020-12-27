@@ -1,11 +1,13 @@
 module.exports = {
-  exclude: ['./node_modules/**'],
   alias: {
     react: 'preact/compat',
     'react-dom': 'preact/compat'
   },
   installOptions: {
     polyfillNode: true
+  },
+  devOptions: {
+    open: 'none'
   },
   plugins: [
     [
@@ -20,10 +22,12 @@ module.exports = {
                 pragma: 'h',
                 pragmaFrag: 'Fragment'
               }
-            ]
+            ],
+            '@prefresh/babel-plugin'
           ]
         }
       }
-    ]
+    ],
+    '@prefresh/snowpack'
   ]
 }
