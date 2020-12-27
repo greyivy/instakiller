@@ -1,4 +1,5 @@
 module.exports = {
+  exclude: ['./node_modules/**'],
   alias: {
     react: 'preact/compat',
     'react-dom': 'preact/compat'

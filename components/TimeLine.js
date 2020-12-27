@@ -4,17 +4,17 @@ import {
   Callout,
   Intent,
   Navbar,
-  Spinner,
-  PanelStack
+  PanelStack,
+  Spinner
 } from '@blueprintjs/core'
 import { Component, createElement, h, render } from 'preact'
-import { useEffect, useState } from 'preact/hooks'
+import { useContext, useEffect, useState } from 'preact/hooks'
+
+import { MastodonInstance } from '../mastodon'
+import MediaRenderer from './media-components/MediaRenderer'
+import Status from './Status'
 import parse from 'html-dom-parser'
 import styled from 'styled-components'
-
-import Status from './Status'
-import MediaRenderer from './media-components/MediaRenderer'
-
 
 const TimeLineWrapper = styled.div`
   margin: 0 auto;
@@ -46,7 +46,7 @@ const tagMap = {
       <HtmlRenderer tags={props.children} />
     </a>
   ),
-  br: () => <br/>,
+  br: () => <br />,
   span: props => (
     <span>
       <HtmlRenderer tags={props.children} />
@@ -76,17 +76,48 @@ const HtmlRenderer = props => {
 }
 
 const Timeline = props => {
-  const statuses = props.statuses
+  const masto = useContext(MastodonInstance)
+  const [statuses, setStatuses] = useState([])
+
+  const loadTimeline = async () => {
+    // Generate iterable of timeline
+    let timeline = null
+
+    if (props.type === 'home') {
+      timeline = masto.fetchHomeTimeline()
+    } else if (props.type === 'public') {
+      timeline = masto.fetchPublicTimeline()
+    }
+
+    if (timeline) {
+      const result = await timeline.next()
+      console.log(result.value)
+      setStatuses(Object.values(result.value))
+    }
+
+    //for await (const statuses of timeline) {
+
+    //  statuses.forEach(status => {
+    //    masto.favouriteStatus(status.id)
+    //  })
+    //}
+  }
+
+  useEffect(() => {
+    if (masto) loadTimeline()
+  }, [masto, props.type])
+
   let content
   let media
   return (
     <TimeLineWrapper>
+      {props.type}
       {statuses.map(status => {
         content = parse(status.content)
         media = status.mediaAttachments
         return (
           <Status key={status.id} account={status.account}>
-            <MediaRenderer media={media}/>
+            <MediaRenderer media={media} />
             <HtmlRenderer tags={content} />
           </Status>
         )
