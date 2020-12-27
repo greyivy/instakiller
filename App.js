@@ -41,6 +41,8 @@ const routes = [
 ]
 
 const Wrapper = styled.div`
+  padding-top: 50px;
+
   .bp3-panel-stack {
     height: calc(100vh - 50px);
   }
@@ -92,7 +94,7 @@ function App (props) {
 
   return (
     <Wrapper>
-      <Navbar>
+      <Navbar fixedToTop>
         <Navbar.Group align={Alignment.LEFT}>
           <Navbar.Heading onClick={() => home()}>Mastogram</Navbar.Heading>
           <Navbar.Divider />
@@ -142,7 +144,7 @@ function App (props) {
         onClose={() => {
           setPanels(panels.slice(1))
         }}
-        renderActivePanelOnly
+        renderActivePanelOnly={false}
         showPanelHeader={false}
         stack={panels}
       />

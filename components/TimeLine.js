@@ -7,8 +7,15 @@ import {
   PanelStack,
   Spinner
 } from '@blueprintjs/core'
-import { Fragment, Component, createElement, h, render } from 'preact'
-import { useContext, useEffect, useState } from 'preact/hooks'
+import { Component, Fragment, createElement, h, render } from 'preact'
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'preact/hooks'
 
 import { MastodonInstance } from '../mastodon'
 import MediaRenderer from './media-components/MediaRenderer'
@@ -20,6 +27,10 @@ const TimeLineWrapper = styled.div`
   margin: 0 auto;
   width: 500px;
   max-width: 90vw;
+`
+
+const CaptionWrapper = styled.div`
+  padding: 0.75rem;
 `
 
 const getCircularReplacer = () => {
@@ -75,62 +86,114 @@ const HtmlRenderer = props => {
   })
 }
 
+// TODO react-virtualized
 const Timeline = props => {
-  const { masto, user } = useContext(MastodonInstance)
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
   const [statuses, setStatuses] = useState([])
 
-  const loadTimeline = async () => {
-    console.log(user)
+  const { type } = props
+  const { masto, user } = useContext(MastodonInstance)
 
-    // Generate iterable of timeline
+  const timeline = useMemo(() => {
+    console.log('getting timeline')
     let timeline = null
 
-    if (props.type === 'home') {
+    if (type === 'home') {
       timeline = masto.fetchHomeTimeline()
-    } else if (props.type === 'local') {
+    } else if (type === 'local') {
       timeline = masto.fetchPublicTimeline({
         local: true
       })
-    } else if (props.type === 'federated') {
+    } else if (type === 'federated') {
       timeline = masto.fetchPublicTimeline()
-    } else if (props.type === 'user') {
+    } else if (type === 'user') {
       timeline = masto.fetchAccountStatuses(props.userId || user.id)
     }
 
-    if (timeline) {
-      const result = await timeline.next()
-      console.log(result.value)
-      setStatuses(Object.values(result.value))
-    }
-
-    //for await (const statuses of timeline) {
-
-    //  statuses.forEach(status => {
-    //    masto.favouriteStatus(status.id)
-    //  })
-    //}
-  }
+    return timeline
+  }, [masto, type])
 
   useEffect(() => {
-    if (masto) loadTimeline()
-  }, [masto, props.type])
+    if (masto) load(true)
+  }, [masto, type])
 
-  let content
-  let media
+  console.log('user', user)
+
+  const load = async clear => {
+    if (clear) {
+      setStatuses([])
+    }
+    setHasMore(false)
+    setIsLoading(true)
+
+    try {
+      if (timeline) {
+        const { value, done } = await timeline.next()
+
+        console.log('timeline', value)
+        const newStatuses = Object.values(value)
+        if (clear) {
+          setStatuses(newStatuses)
+        } else {
+          setStatuses([...statuses, ...newStatuses])
+        }
+        setHasMore(!done)
+      } else {
+        throw new Error('Invalid timeline')
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const loader = useRef(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '240px',
+      threshold: 1.0
+    })
+    if (loader.current) {
+      observer.observe(loader.current)
+    }
+  })
+
+  const handleObserver = entities => {
+    const target = entities[0]
+    if (target.isIntersecting) {
+      load()
+    }
+  }
+
   return (
     <TimeLineWrapper>
-      {props.type === 'user' && <>USER HEADER HERE</>}
+      {type === 'user' && <>USER HEADER HERE</>}
 
       {statuses.map(status => {
-        content = parse(status.content)
-        media = status.mediaAttachments
+        const content = parse(status.content)
+        const media = status.mediaAttachments
+
         return (
           <Status key={status.id} account={status.account}>
             <MediaRenderer media={media} />
-            <HtmlRenderer tags={content} />
+            <CaptionWrapper>
+              <HtmlRenderer tags={content} />
+            </CaptionWrapper>
           </Status>
         )
       })}
+
+      {isLoading && <Spinner />}
+
+      {hasMore && (
+        <div className='loading' ref={loader}>
+          <h2>Load More</h2>
+        </div>
+      )}
     </TimeLineWrapper>
   )
 }
