@@ -12,7 +12,7 @@ import { useEffect, useState } from 'preact/hooks'
 import parse from 'html-dom-parser'
 import styled from 'styled-components'
 
-import MediaRenderer from './components/media-components/MediaRender'
+import MediaRenderer from './media-components/MediaRenderer'
 
 
 const TimeLineWrapper = styled.div`

@@ -12,7 +12,7 @@ import { useContext, useEffect, useMemo, useState } from 'preact/hooks'
 
 import Timeline from './components/TimeLine'
 
-const TestComponent = (props = <div>test</div>)
+// const TestComponent = (props = <div>test</div>)
 
 function App (props) {
   const masto = useContext(MastodonInstance)
@@ -40,15 +40,15 @@ function App (props) {
     if (masto) loadTimeline()
   }, [masto])
 
-  const [panels, setPanels] = useState([
-    {
-      component: TestComponent,
-      props: {
-        panelNumber: 1
-      },
-      title: 'Panel 1'
-    }
-  ])
+  // const [panels, setPanels] = useState([
+  //   {
+  //     component: TestComponent,
+  //     props: {
+  //       panelNumber: 1
+  //     },
+  //     title: 'Panel 1'
+  //   }
+  // ])
 
   return (
     <div>
@@ -61,7 +61,7 @@ function App (props) {
         </Navbar.Group>
       </Navbar>
 
-      <PanelStack
+      {/* <PanelStack
         initialPanel={panels[0]}
         onOpen={panel => {
           setPanels([panel, ...panels])
@@ -71,7 +71,7 @@ function App (props) {
         }}
         renderActivePanelOnly
         showPanelHeader
-      />
+      /> */}
 
       <Timeline statuses={statuses} />
     </div>

@@ -10,7 +10,8 @@
     "@babel/plugin-transform-react-jsx": "^7.12.12",
     "@blueprintjs/core": "^3.36.0",
     "@snowpack/plugin-babel": "^2.1.5",
-    "snowpack": "^2.18.5"
+    "snowpack": "^2.18.5",
+    "styled-components": "^5.2.1"
   },
   "scripts": {
     "start": "snowpack dev",
