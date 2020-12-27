@@ -1,4 +1,6 @@
-import { h, Component } from 'preact'
+import { Component, h } from 'preact'
+
+import history from 'history/browser'
 import styled from 'styled-components'
 
 const StatusWrapper = styled.div`
@@ -19,7 +21,7 @@ const StatusHeader = styled.header`
   justify-content: space-between;
   padding: 8px;
   margin: 0;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
   box-shadow: 0px 2.5px 2px -3px var(--shadowColor);
   & > a {
     font-size: 1.2rem;
@@ -35,31 +37,29 @@ const Avatar = styled.div`
   overflow: hidden;
   & img {
     width: 100%;
-    height: auto;  
+    height: auto;
   }
 `
 
 const ContentWrapper = styled.div`
   width: 100%;
-  padding: .75rem;
+  padding: 0.75rem;
 `
 
 const Status = props => {
   const { account } = props
-  const { username, url, avatarStatic, bot } = account
+  const { id, username, url, avatarStatic, bot } = account
   return (
     <StatusWrapper>
       <StatusHeader>
         <Avatar>
-          <a href={url}>
-            <img src={avatarStatic} alt={username + 's avatar'}/>
+          <a onClick={() => history.push(`/user/${id}`)}>
+            <img src={avatarStatic} alt={username + 's avatar'} />
           </a>
         </Avatar>
-        <a href={url}>{'@' + username}</a>
+        <a onClick={() => history.push(`/user/${id}`)}>{'@' + username}</a>
       </StatusHeader>
-      <ContentWrapper>
-        {props.children}
-      </ContentWrapper>
+      <ContentWrapper>{props.children}</ContentWrapper>
     </StatusWrapper>
   )
 }

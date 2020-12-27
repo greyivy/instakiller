@@ -12,7 +12,7 @@ import { MastodonInstance, MastodonInstanceWrapper } from './mastodon'
 import { useContext, useEffect, useMemo, useState } from 'preact/hooks'
 
 import { Action } from 'history'
-import Timeline from './components/TimeLine'
+import Timeline from './components/Timeline'
 import history from 'history/browser'
 import { match } from 'path-to-regexp'
 import styled from 'styled-components'
@@ -23,6 +23,13 @@ const routes = [
   {
     path: '/timeline/:type',
     component: Timeline
+  },
+  {
+    path: '/user/:userId',
+    component: Timeline,
+    props: {
+      type: 'user'
+    }
   },
   {
     path: '/',
@@ -99,8 +106,21 @@ function App (props) {
           <Button
             className='bp3-minimal'
             icon='home'
-            text='Public'
-            onClick={() => history.push('/timeline/public')}
+            text='Local'
+            onClick={() => history.push('/timeline/local')}
+          />
+          <Button
+            className='bp3-minimal'
+            icon='home'
+            text='Federated'
+            onClick={() => history.push('/timeline/federated')}
+          />
+
+          <Button
+            className='bp3-minimal'
+            icon='home'
+            text='Mine'
+            onClick={() => history.push('/timeline/user')}
           />
         </Navbar.Group>
       </Navbar>

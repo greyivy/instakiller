@@ -7,7 +7,7 @@ import {
   PanelStack,
   Spinner
 } from '@blueprintjs/core'
-import { Component, createElement, h, render } from 'preact'
+import { Fragment, Component, createElement, h, render } from 'preact'
 import { useContext, useEffect, useState } from 'preact/hooks'
 
 import { MastodonInstance } from '../mastodon'
@@ -76,17 +76,25 @@ const HtmlRenderer = props => {
 }
 
 const Timeline = props => {
-  const masto = useContext(MastodonInstance)
+  const { masto, user } = useContext(MastodonInstance)
   const [statuses, setStatuses] = useState([])
 
   const loadTimeline = async () => {
+    console.log(user)
+
     // Generate iterable of timeline
     let timeline = null
 
     if (props.type === 'home') {
       timeline = masto.fetchHomeTimeline()
-    } else if (props.type === 'public') {
+    } else if (props.type === 'local') {
+      timeline = masto.fetchPublicTimeline({
+        local: true
+      })
+    } else if (props.type === 'federated') {
       timeline = masto.fetchPublicTimeline()
+    } else if (props.type === 'user') {
+      timeline = masto.fetchAccountStatuses(props.userId || user.id)
     }
 
     if (timeline) {
@@ -111,7 +119,8 @@ const Timeline = props => {
   let media
   return (
     <TimeLineWrapper>
-      {props.type}
+      {props.type === 'user' && <>USER HEADER HERE</>}
+
       {statuses.map(status => {
         content = parse(status.content)
         media = status.mediaAttachments

@@ -9,7 +9,7 @@ const MastodonInstance = createContext(null)
 const MastodonInstanceWrapper = props => {
   const { uri, accessToken, onError } = props
 
-  const [masto, setMasto] = useState(null)
+  const [value, setValue] = useState(null)
 
   const login = async () => {
     try {
@@ -18,7 +18,9 @@ const MastodonInstanceWrapper = props => {
         accessToken
       })
 
-      setMasto(masto)
+      const user = await masto.verifyCredentials()
+
+      setValue({ masto, user })
     } catch (e) {
       onError && onError(e)
     }
@@ -27,15 +29,15 @@ const MastodonInstanceWrapper = props => {
   useEffect(() => {
     login()
 
-    return () => setMasto(null)
+    return () => setValue(null)
   }, [uri, accessToken])
 
-  if (!masto) {
+  if (!value) {
     return <Spinner />
   }
 
   return (
-    <MastodonInstance.Provider value={masto}>
+    <MastodonInstance.Provider value={value}>
       {props.children}
     </MastodonInstance.Provider>
   )
