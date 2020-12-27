@@ -1,28 +1,29 @@
 import {
   Alignment,
   Button,
-  Callout,
-  Icon,
-  Intent,
   Menu,
   Navbar,
   PanelStack,
   Popover,
-  Position,
-  Spinner
+  Position
 } from '@blueprintjs/core'
 import { Component, Fragment, h, render } from 'preact'
-import { MastodonInstance, MastodonInstanceWrapper } from './mastodon'
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks'
+import { useContext, useEffect, useState } from 'preact/hooks'
 
 import { Action } from 'history'
-import Timeline from './components/Timeline'
+import { MastodonInstance } from './mastodon'
 import VirtualizedTimeline from './components/VirtualizedTimeline'
 import history from 'history/browser'
 import { match } from 'path-to-regexp'
 import styled from 'styled-components'
 
-// const TestComponent = (props = <div>test</div>)
+const Wrapper = styled.div`
+  padding-top: 50px;
+
+  .bp3-panel-stack {
+    height: calc(100vh - ${props => (props.isSubPage ? 50 : 100)}px);
+  }
+`
 
 const routes = [
   {
@@ -31,27 +32,19 @@ const routes = [
   },
   {
     path: '/user/:userId?',
-    component: Timeline,
+    component: VirtualizedTimeline,
     props: {
       type: 'user'
     }
   },
   {
     path: '/',
-    component: Timeline,
+    component: VirtualizedTimeline,
     props: {
       type: 'home'
     }
   }
 ]
-
-const Wrapper = styled.div`
-  padding-top: 50px;
-
-  .bp3-panel-stack {
-    height: calc(100vh - ${props => props.isSubPage ? 50 : 100}px);
-  }
-`
 
 const getRoutePanel = path => {
   const { path: routePath, component, props } = routes.find(route => {

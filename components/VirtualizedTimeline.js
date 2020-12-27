@@ -1,100 +1,30 @@
 import {
-  Alignment,
-  Button,
-  Callout,
-  Intent,
-  Navbar,
-  PanelStack,
-  Spinner
-} from '@blueprintjs/core'
-import {
   AutoSizer,
   CellMeasurer,
   CellMeasurerCache,
   InfiniteLoader,
   List
 } from 'react-virtualized'
-import { Component, Fragment, createElement, h, render } from 'preact'
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'preact/hooks'
+import { Component, Fragment, createElement, h } from 'preact'
+import { useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 
+import HtmlRenderer from './HtmlRenderer'
+import { Intent } from '@blueprintjs/core'
 import { MastodonInstance } from '../mastodon'
 import MediaRenderer from './media-components/MediaRenderer'
 import Status from './Status'
 import parse from 'html-dom-parser'
 import styled from 'styled-components'
+import toaster from './toaster'
 
-const TimeLineWrapper = styled.div`
-  margin: 0 auto;
-  width: 500px;
-  max-width: 90vw;
-`
+const STATUS_WIDTH_MAX_PX = 600
+const STATUS_SPACING_PX = 6
 
 const CaptionWrapper = styled.div`
   padding: 0.75rem;
 `
 
-const getCircularReplacer = () => {
-  const seen = new WeakSet()
-  return (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return
-      }
-      seen.add(value)
-    }
-    return value
-  }
-}
-
-const tagMap = {
-  p: props => (
-    <p>
-      <HtmlRenderer tags={props.children} />
-    </p>
-  ),
-  a: props => (
-    <a href={props.attribs.href} target={props.attribs.target}>
-      <HtmlRenderer tags={props.children} />
-    </a>
-  ),
-  br: () => <br />,
-  span: props => (
-    <span>
-      <HtmlRenderer tags={props.children} />
-    </span>
-  )
-}
-
-const HtmlRenderer = props => {
-  const { tags } = props
-
-  return tags.map(tag => {
-    const { children, parent, prev, next, ...other } = tag
-
-    if (tag.type === 'text') {
-      return tag.data
-    } else if (tagMap[tag.name]) {
-      return createElement(tagMap[tag.name], tag)
-    } else {
-      return (
-        <strong>
-          Unknown tag:{' '}
-          <pre>{JSON.stringify(other, getCircularReplacer(), 2)}</pre>
-        </strong>
-      )
-    }
-  })
-}
-
-// TODO react-virtualized
-const Timeline = props => {
+const VirtualizedTimeline = props => {
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(false)
   const [statuses, setStatuses] = useState([])
@@ -125,17 +55,15 @@ const Timeline = props => {
     () =>
       new CellMeasurerCache({
         fixedWidth: true,
-        defaultHeight: 800
+        defaultHeight: 600
       }),
-    [masto, type]
+    []
   )
 
   useEffect(() => {
-    //cache.clearAll()
+    cache.clearAll()
     if (masto) load(true)
   }, [masto, type])
-
-  console.log('user', user)
 
   const load = async clear => {
     if (clear) {
@@ -148,19 +76,22 @@ const Timeline = props => {
       if (timeline) {
         const { value, done } = await timeline.next()
 
-        console.log('timeline', value)
-        const newStatuses = Object.values(value)
-        if (clear) {
-          setStatuses(newStatuses)
-        } else {
-          setStatuses([...statuses, ...newStatuses])
+        if (value) {
+          const newStatuses = Object.values(value)
+          if (clear) {
+            setStatuses(newStatuses)
+          } else {
+            setStatuses([...statuses, ...newStatuses])
+          }
         }
+
         setHasMore(!done)
       } else {
         throw new Error('Invalid timeline')
       }
     } catch (e) {
       console.error(e)
+      toaster.show({ message: e.message, intent: Intent.DANGER })
     } finally {
       setIsLoading(false)
     }
@@ -175,7 +106,7 @@ const Timeline = props => {
           <InfiniteLoader
             isRowLoaded={({ index }) => !!statuses[index]}
             loadMoreRows={() => load()}
-            rowCount={10000000}
+            rowCount={hasMore ? Number.MAX_VALUE : statuses.length}
           >
             {({ onRowsRendered, registerChild }) => (
               <List
@@ -185,10 +116,7 @@ const Timeline = props => {
                 height={height}
                 rowHeight={cache.rowHeight}
                 rowRenderer={({ index, key, style, parent }) => {
-                  const status = statuses[index]
-
-                  const content = parse(status.content)
-                  const media = status.mediaAttachments
+                  const { account, content, mediaAttachments } = statuses[index]
 
                   return (
                     <CellMeasurer
@@ -202,17 +130,28 @@ const Timeline = props => {
                         style={{
                           ...style,
                           width: '100%',
-                          padding: 6
+                          padding: STATUS_SPACING_PX,
+                          paddingTop:
+                            index === 0
+                              ? STATUS_SPACING_PX * 2
+                              : STATUS_SPACING_PX,
+                          paddingBottom:
+                            index === statuses.length - 1
+                              ? STATUS_SPACING_PX * 2
+                              : STATUS_SPACING_PX
                         }}
                       >
                         <Status
-                          style={{ maxWidth: 500, margin: 'auto' }}
-                          account={status.account}
+                          style={{
+                            maxWidth: STATUS_WIDTH_MAX_PX,
+                            margin: 'auto'
+                          }}
+                          account={account}
                         >
-                          <MediaRenderer media={media} />
+                          <MediaRenderer media={mediaAttachments} />
 
                           <CaptionWrapper>
-                            <HtmlRenderer tags={content} />
+                            <HtmlRenderer content={content} />
                           </CaptionWrapper>
                         </Status>
                       </div>
@@ -229,4 +168,4 @@ const Timeline = props => {
   )
 }
 
-export default Timeline
+export default VirtualizedTimeline

@@ -1,5 +1,6 @@
-import { Component, h, render } from 'preact'
 import 'preact/debug'
+
+import { Component, h, render } from 'preact'
 
 import App from './App'
 import { MastodonInstanceWrapper } from './mastodon'
@@ -11,5 +12,5 @@ render(
   >
     <App />
   </MastodonInstanceWrapper>,
-  document.body
+  document.getElementById('App')
 )
