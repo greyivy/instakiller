@@ -2,10 +2,10 @@ import '/node_modules/flickity/dist/flickity.css'
 import '../../assets/flickity-reset.css'
 
 import { StatusAudio, StatusGif, StatusImage, StatusVideo } from './renderers'
-import { createElement, h } from 'preact'
 import { useEffect, useRef, useState } from 'preact/hooks'
 
 import Flickity from 'react-flickity-component'
+import { createElement } from 'preact'
 import styled from 'styled-components'
 
 const FLICKITY_CLASSNAME = 'carousel'

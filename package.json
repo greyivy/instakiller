@@ -28,6 +28,8 @@
     "@prefresh/babel-plugin": "^0.4.0",
     "@prefresh/snowpack": "^3.0.0",
     "@snowpack/plugin-babel": "^2.1.5",
+    "babel-plugin-jsx-imports": "^1.0.0",
+    "babel-preset-preact": "^2.0.0",
     "standardjs": "^1.0.0-alpha"
   }
 }

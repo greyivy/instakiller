@@ -6,7 +6,6 @@ import {
   List
 } from 'react-virtualized'
 import { Button, Intent, NonIdealState, Spinner } from '@blueprintjs/core'
-import { Component, Fragment, createElement, h } from 'preact'
 import { useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 
 import CenteredSpinner from './CenteredSpinner'

@@ -1,4 +1,3 @@
-import { h, Component } from 'preact'
 import styled from 'styled-components'
 
 const Header = styled.header`
@@ -18,11 +17,7 @@ const Avatar = styled.div`
 `
 
 const UserHeader = props => {
-  return(
-    <Header>
-
-    </Header>
-  )
+  return <Header></Header>
 }
 
 export default UserHeader

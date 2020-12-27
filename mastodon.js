@@ -1,16 +1,9 @@
 import { Button, Intent, NonIdealState } from '@blueprintjs/core'
-import {
-  Component,
-  Fragment,
-  createContext,
-  createElement,
-  h,
-  render
-} from 'preact'
 import { useEffect, useState } from 'preact/hooks'
 
 import CenteredSpinner from './components/CenteredSpinner'
 import { Masto } from 'masto'
+import { createContext } from 'preact'
 import toaster from './components/toaster'
 
 const MastodonInstance = createContext(null)

@@ -14,6 +14,7 @@ module.exports = {
       '@snowpack/plugin-babel',
       {
         input: ['.js', '.mjs', '.jsx', '.ts', '.tsx'], // (optional) specify files for Babel to transform
+        presets: ['preact'],
         transformOptions: {
           plugins: [
             [
@@ -23,11 +24,18 @@ module.exports = {
                 pragmaFrag: 'Fragment'
               }
             ],
+            [
+              'babel-plugin-jsx-imports',
+              {
+                pragma: '{ h } from preact',
+                pragmaFrag: '{ Fragment } from preact'
+              }
+            ]
             //'@prefresh/babel-plugin'
           ]
         }
       }
-    ],
+    ]
     //'@prefresh/snowpack'
   ]
 }

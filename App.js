@@ -7,7 +7,6 @@ import {
   Popover,
   Position
 } from '@blueprintjs/core'
-import { Component, Fragment, h, render } from 'preact'
 import { MastodonInstance, MastodonInstanceWrapper } from './mastodon'
 import { useContext, useEffect, useState } from 'preact/hooks'
 

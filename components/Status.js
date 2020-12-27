@@ -1,5 +1,3 @@
-import { Component, h } from 'preact'
-
 import history from 'history/browser'
 import styled from 'styled-components'
 

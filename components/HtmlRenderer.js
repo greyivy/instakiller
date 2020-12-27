@@ -1,5 +1,4 @@
-import { Component, Fragment, createElement, h } from 'preact'
-
+import { createElement } from 'preact'
 import parse from 'html-dom-parser'
 
 const getCircularReplacer = () => {

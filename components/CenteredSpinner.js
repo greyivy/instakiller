@@ -1,5 +1,3 @@
-import { Component, Fragment, createElement, h } from 'preact'
-
 import { Spinner } from '@blueprintjs/core'
 import styled from 'styled-components'
 

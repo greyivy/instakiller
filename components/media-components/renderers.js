@@ -1,5 +1,3 @@
-import { Component, Fragment, createElement, h, render } from 'preact'
-
 import styled from 'styled-components'
 
 // Center inner image vertically
