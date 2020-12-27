@@ -11,6 +11,7 @@ const StatusWrapper = styled.div`
   background: var(--white);
   border-radius: 5px;
   box-shadow: var(--shadow);
+  padding-bottom: 1rem;
   & > hr {
     margin: 1rem 0;
   }
@@ -48,7 +49,7 @@ const Status = props => {
   const { account } = props
   const { id, username, url, avatarStatic, bot } = account
   return (
-    <StatusWrapper>
+    <StatusWrapper style={props.style}>
       <StatusHeader>
         <Avatar>
           <a onClick={() => history.push(`/user/${id}`)}>

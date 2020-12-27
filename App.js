@@ -2,9 +2,13 @@ import {
   Alignment,
   Button,
   Callout,
+  Icon,
   Intent,
+  Menu,
   Navbar,
   PanelStack,
+  Popover,
+  Position,
   Spinner
 } from '@blueprintjs/core'
 import { Component, Fragment, h, render } from 'preact'
@@ -13,6 +17,7 @@ import { useContext, useEffect, useMemo, useState } from 'preact/hooks'
 
 import { Action } from 'history'
 import Timeline from './components/Timeline'
+import VirtualizedTimeline from './components/VirtualizedTimeline'
 import history from 'history/browser'
 import { match } from 'path-to-regexp'
 import styled from 'styled-components'
@@ -22,7 +27,7 @@ import styled from 'styled-components'
 const routes = [
   {
     path: '/timeline/:type',
-    component: Timeline
+    component: VirtualizedTimeline
   },
   {
     path: '/user/:userId?',
@@ -44,7 +49,7 @@ const Wrapper = styled.div`
   padding-top: 50px;
 
   .bp3-panel-stack {
-    height: calc(100vh - 50px);
+    height: calc(100vh - ${props => props.isSubPage ? 50 : 100}px);
   }
 `
 
@@ -58,13 +63,15 @@ const getRoutePanel = path => {
   return { component, props: { ...props, ...params } }
 }
 
+const isMatch = path => match(path)(location.pathname)
+
 function App (props) {
   const [panels, setPanels] = useState([
     getRoutePanel(window.location.pathname)
   ])
 
   useEffect(() => {
-    // Listen for changes to the current location.
+    // Listen for changes to the current location
     const unlisten = history.listen(({ location, action }) => {
       const panel = getRoutePanel(location.pathname)
 
@@ -92,13 +99,13 @@ function App (props) {
 
   const { user } = useContext(MastodonInstance)
 
+  const isSubPage = panels.length > 1
+
   return (
-    <Wrapper>
+    <Wrapper isSubPage={isSubPage}>
       <Navbar fixedToTop>
         <Navbar.Group align={Alignment.LEFT}>
-          <Navbar.Heading onClick={() => home()}>Mastogram</Navbar.Heading>
-          <Navbar.Divider />
-          {panels.length > 1 && (
+          {isSubPage && (
             <>
               <Button
                 className='bp3-minimal'
@@ -109,32 +116,33 @@ function App (props) {
               <Navbar.Divider />
             </>
           )}
-          <Button
-            className='bp3-minimal'
-            icon='home'
-            text='Home'
-            onClick={() => home()}
-          />
-          <Button
-            className='bp3-minimal'
-            icon='people'
-            text='Local'
-            onClick={() => history.replace('/timeline/local')}
-          />
-          <Button
-            className='bp3-minimal'
-            icon='globe-network'
-            text='Federated'
-            onClick={() => history.replace('/timeline/federated')}
-          />
-
-          <Button
-            className='bp3-minimal'
-            icon='user'
-            text={user.username}
-            onClick={() => history.replace('/user')}
-          />
+          {!isSubPage && (
+            <Popover
+              content={
+                <Menu>
+                  <Menu.Item onClick={() => {}} text={user.username} active />
+                </Menu>
+              }
+              position={Position.BOTTOM_LEFT}
+            >
+              <Navbar.Heading>
+                <Button minimal rightIcon='chevron-down'>
+                  {user.username}
+                </Button>
+              </Navbar.Heading>
+            </Popover>
+          )}
         </Navbar.Group>
+        {!isSubPage && (
+          <Navbar.Group align={Alignment.RIGHT}>
+            <Button
+              minimal
+              icon='send-message'
+              title='Messages'
+              onClick={() => history.replace('/user')}
+            />
+          </Navbar.Group>
+        )}
       </Navbar>
 
       <PanelStack
@@ -148,6 +156,46 @@ function App (props) {
         showPanelHeader={false}
         stack={panels}
       />
+
+      {!isSubPage && (
+        <Navbar style={{ position: 'fixed', bottom: 0 }}>
+          <Navbar.Group align={null} style={{ justifyContent: 'space-evenly' }}>
+            <Button
+              minimal
+              fill
+              icon='home'
+              title='Following'
+              onClick={() => home()}
+              intent={isMatch('/') ? 'primary' : ''}
+            />
+            <Button
+              minimal
+              fill
+              icon='people'
+              title='Local timeline'
+              onClick={() => history.replace('/timeline/local')}
+              intent={isMatch('/timeline/local') ? 'primary' : ''}
+            />
+            <Button
+              minimal
+              fill
+              icon='globe-network'
+              title='Federated timeline'
+              onClick={() => history.replace('/timeline/federated')}
+              intent={isMatch('/timeline/federated') ? 'primary' : ''}
+            />
+
+            <Button
+              minimal
+              fill
+              icon='user'
+              title='Profile'
+              onClick={() => history.replace('/user')}
+              intent={isMatch('/user/:userId') ? 'primary' : ''}
+            />
+          </Navbar.Group>
+        </Navbar>
+      )}
     </Wrapper>
   )
 }

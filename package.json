@@ -5,12 +5,14 @@
   "main": "index.js",
   "dependencies": {
     "@blueprintjs/core": "^3.36.0",
+    "flickity": "^2.2.1",
     "history": "^5.0.0",
     "html-dom-parser": "^1.0.0",
     "masto": "^3.6.4",
     "path-to-regexp": "^6.2.0",
     "preact": "^10.5.7",
-    "react-simple-image-slider": "^2.0.1",
+    "react-flickity-component": "^3.6.0",
+    "react-virtualized": "^9.22.3",
     "snowpack": "^2.18.5",
     "styled-components": "^5.2.1"
   },
@@ -22,9 +24,10 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@snowpack/plugin-babel": "^2.1.5",
     "@babel/plugin-transform-react-jsx": "^7.12.12",
     "@prefresh/babel-plugin": "^0.4.0",
-    "@prefresh/snowpack": "^3.0.0"
+    "@prefresh/snowpack": "^3.0.0",
+    "@snowpack/plugin-babel": "^2.1.5",
+    "standardjs": "^1.0.0-alpha"
   }
 }

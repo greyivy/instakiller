@@ -23,11 +23,11 @@ module.exports = {
                 pragmaFrag: 'Fragment'
               }
             ],
-            '@prefresh/babel-plugin'
+            //'@prefresh/babel-plugin'
           ]
         }
       }
     ],
-    '@prefresh/snowpack'
+    //'@prefresh/snowpack'
   ]
 }
