@@ -6,7 +6,9 @@
   --bg: #f8f8f8;
   --borderColor: #6c7188;
   --shadowColor: #6c7188;
-  --shadow: 0px 0px 2px var(--shadowColor)
+  --shadow: 0px 0px 2px var(--shadowColor);
+
+  --containerWidth: 600px;
 }
 body {
   margin: 0;
@@ -15,15 +17,4 @@ body {
 }
 p {
   font-size: 1.1rem;
-}
-.flickity-prev-next-button {
-  width: 30px;
-  height: 30px;
-}
-.flickity-button {
-  background: hsla(0, 0%, 100%, 0.23);
-  color: #333333ab;
-}
-.flickity-button:hover {
-  background: #ffffffb3;
 }

@@ -13,12 +13,18 @@ import HtmlRenderer from './HtmlRenderer'
 import { MastodonInstance } from '../mastodon'
 import MediaRenderer from './media-components/MediaRenderer'
 import Status from './Status'
-import parse from 'html-dom-parser'
+import UserHeader from './UserHeader'
 import styled from 'styled-components'
 import toaster from './toaster'
 
-const STATUS_WIDTH_MAX_PX = 600
-const STATUS_SPACING_PX = 6
+const ItemContainer = styled.div`
+  max-width: var(--containerWidth);
+  margin: auto;
+`
+
+const HeaderWrapper = styled.div`
+  margin-bottom: 1rem;
+`
 
 const CaptionWrapper = styled.div`
   padding: 0.75rem;
@@ -28,13 +34,14 @@ const VirtualizedTimeline = props => {
   const [error, setError] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(false)
-  const [statuses, setStatuses] = useState([])
+  const [items, setItems] = useState([])
 
-  const { type } = props
+  const { params } = props
   const { masto, user } = useContext(MastodonInstance)
+  const { type } = params
 
   const timeline = useMemo(() => {
-    console.log('getting timeline')
+    console.log('getting timeline', params)
     let timeline = null
 
     if (type === 'home') {
@@ -46,11 +53,13 @@ const VirtualizedTimeline = props => {
     } else if (type === 'federated') {
       timeline = masto.fetchPublicTimeline()
     } else if (type === 'user') {
-      timeline = masto.fetchAccountStatuses(props.userId || user.id)
+      timeline = masto.fetchAccountStatuses(params.userId)
+    } else if (type === 'self') {
+      timeline = masto.fetchAccountStatuses(user.id)
     }
 
     return timeline
-  }, [masto, type])
+  }, [masto, type, params])
 
   const cache = useMemo(
     () =>
@@ -64,11 +73,11 @@ const VirtualizedTimeline = props => {
   useEffect(() => {
     cache.clearAll()
     if (masto) load(true)
-  }, [masto, type])
+  }, [masto, type, params])
 
   const load = async clear => {
     if (clear) {
-      setStatuses([])
+      setItems([])
     }
     setError(null)
     setHasMore(false)
@@ -78,13 +87,30 @@ const VirtualizedTimeline = props => {
       if (timeline) {
         const { value, done } = await timeline.next()
 
-        if (value) {
-          const newStatuses = Object.values(value)
-          if (clear) {
-            setStatuses(newStatuses)
-          } else {
-            setStatuses([...statuses, ...newStatuses])
+        let header = null
+
+        /*if (type === 'user') {
+          header = {
+            render: () => <UserHeader userId={params.userId || user.id} />
           }
+        }*/
+
+        if (value) {
+          let tempItems = []
+
+          const newItems = Object.values(value)
+
+          if (clear) {
+            tempItems = newItems
+          } else {
+            tempItems = [...items, ...newItems]
+          }
+
+          setItems(tempItems)
+        }
+
+        if (header) {
+          tempItems.unshift(header)
         }
 
         setHasMore(!done)
@@ -100,6 +126,13 @@ const VirtualizedTimeline = props => {
     }
   }
 
+  let header = null
+  if (type === 'user') {
+    header = <UserHeader userId={params.userId} />
+  } else if (type === 'self') {
+    header = <UserHeader userId={user.id} self />
+  }
+
   // TODO accessibility https://github.com/bvaughn/react-virtualized/blob/master/docs/ArrowKeyStepper.md
   return (
     <>
@@ -108,9 +141,9 @@ const VirtualizedTimeline = props => {
       <AutoSizer style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
         {({ width, height }) => (
           <InfiniteLoader
-            isRowLoaded={({ index }) => !!statuses[index]}
+            isRowLoaded={({ index }) => !!items[index]}
             loadMoreRows={() => load()}
-            rowCount={hasMore ? Number.MAX_VALUE : statuses.length}
+            rowCount={hasMore ? Number.MAX_VALUE : items.length}
           >
             {({ onRowsRendered, registerChild }) => (
               <List
@@ -123,18 +156,21 @@ const VirtualizedTimeline = props => {
                   isLoading ? (
                     <CenteredSpinner />
                   ) : error ? (
-                    <NonIdealState
-                      icon='error'
-                      title='Error fetching timeline'
-                      action={
-                        <Button
-                          intent={Intent.PRIMARY}
-                          onClick={() => load(true)}
-                        >
-                          Try again
-                        </Button>
-                      }
-                    />
+                    <>
+                      {header}
+                      <NonIdealState
+                        icon='error'
+                        title='Error fetching timeline'
+                        action={
+                          <Button
+                            intent={Intent.PRIMARY}
+                            onClick={() => load(true)}
+                          >
+                            Try again
+                          </Button>
+                        }
+                      />
+                    </>
                   ) : (
                     <NonIdealState
                       icon='clean'
@@ -144,7 +180,7 @@ const VirtualizedTimeline = props => {
                   )
                 }
                 rowRenderer={({ index, key, style, parent }) => {
-                  const { account, content, mediaAttachments } = statuses[index]
+                  const item = items[index]
 
                   return (
                     <CellMeasurer
@@ -154,39 +190,24 @@ const VirtualizedTimeline = props => {
                       columnIndex={0}
                       rowIndex={index}
                     >
-                      <div
-                        style={{
-                          ...style,
-                          width: '100%',
-                          padding: STATUS_SPACING_PX,
-                          paddingTop:
-                            index === 0
-                              ? STATUS_SPACING_PX * 2
-                              : STATUS_SPACING_PX,
-                          paddingBottom:
-                            index === statuses.length - 1
-                              ? STATUS_SPACING_PX * 2
-                              : STATUS_SPACING_PX
-                        }}
-                      >
-                        <Status
-                          style={{
-                            maxWidth: STATUS_WIDTH_MAX_PX,
-                            margin: 'auto'
-                          }}
-                          account={account}
-                        >
-                          <MediaRenderer media={mediaAttachments} />
+                      <div style={style}>
+                        <ItemContainer>
+                          {index === 0 && (
+                            <HeaderWrapper>{header}</HeaderWrapper>
+                          )}
+                          <Status account={item.account}>
+                            <MediaRenderer media={item.mediaAttachments} />
 
-                          <CaptionWrapper>
-                            <HtmlRenderer content={content} />
-                          </CaptionWrapper>
-                        </Status>
+                            <CaptionWrapper>
+                              <HtmlRenderer content={item.content} />
+                            </CaptionWrapper>
+                          </Status>
+                        </ItemContainer>
                       </div>
                     </CellMeasurer>
                   )
                 }}
-                rowCount={statuses.length}
+                rowCount={items.length}
               />
             )}
           </InfiniteLoader>

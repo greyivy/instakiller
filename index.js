@@ -1,6 +1,12 @@
 import 'preact/debug'
 
 import App from './App'
+import { PreferencesWrapper } from './prefs'
 import { render } from 'preact'
 
-render(<App />, document.getElementById('App'))
+render(
+  <PreferencesWrapper>
+    <App />
+  </PreferencesWrapper>,
+  document.getElementById('App')
+)

@@ -11,6 +11,8 @@ import { MastodonInstance, MastodonInstanceWrapper } from './mastodon'
 import { useContext, useEffect, useState } from 'preact/hooks'
 
 import { Action } from 'history'
+import { Preferences } from './prefs'
+import Settings from './components/Settings'
 import VirtualizedTimeline from './components/VirtualizedTimeline'
 import history from 'history/browser'
 import { match } from 'path-to-regexp'
@@ -26,7 +28,7 @@ const Wrapper = styled.div`
     height: 100%;
 
     .bp3-panel-stack-view {
-      background: none;
+      background: var(--bg);
     }
   }
 `
@@ -37,29 +39,40 @@ const routes = [
     component: VirtualizedTimeline
   },
   {
-    path: '/user/:userId?',
+    path: '/user',
     component: VirtualizedTimeline,
-    props: {
+    defaultParams: {
+      type: 'self'
+    }
+  },
+  {
+    path: '/user/:userId',
+    component: VirtualizedTimeline,
+    defaultParams: {
       type: 'user'
     }
   },
   {
+    path: '/settings',
+    component: Settings
+  },
+  {
     path: '/',
     component: VirtualizedTimeline,
-    props: {
+    defaultParams: {
       type: 'home'
     }
   }
 ]
 
 const getRoutePanel = path => {
-  const { path: routePath, component, props } = routes.find(route => {
+  const { path: routePath, component, defaultParams } = routes.find(route => {
     return match(route.path)(path)
   })
 
   const { params } = match(routePath)(path)
 
-  return { component, props: { ...props, ...params } }
+  return { component, props: { params: { ...defaultParams, ...params } } }
 }
 
 const isMatch = path => match(path)(location.pathname)
@@ -188,14 +201,21 @@ function App (props) {
               onClick={() => history.replace('/timeline/federated')}
               intent={isMatch('/timeline/federated') ? 'primary' : ''}
             />
-
             <Button
               minimal
               fill
               icon='user'
               title='Profile'
               onClick={() => history.replace('/user')}
-              intent={isMatch('/user/:userId') ? 'primary' : ''}
+              intent={isMatch('/user') ? 'primary' : ''}
+            />
+            <Button
+              minimal
+              fill
+              icon='settings'
+              title='Settings'
+              onClick={() => history.replace('/settings')}
+              intent={isMatch('/settings') ? 'primary' : ''}
             />
           </Navbar.Group>
         </Navbar>
