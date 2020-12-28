@@ -18,9 +18,12 @@ const Avatar = styled.div`
 `
 
 const UserHeader = props => {
+  const { url, description, header } = props.account
   return(
     <Header>
-
+      <Avatar>
+        <img src={url} alt={description}/>
+      </Avatar>
     </Header>
   )
 }
