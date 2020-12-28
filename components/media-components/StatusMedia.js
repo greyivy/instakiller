@@ -54,6 +54,14 @@ const MediaImage = styled.div`
   height: 100%;
 `
 
+const AudioWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+`
+
 export const StatusImage = props => {
   return (
     <MediaWrapper>
@@ -74,7 +82,11 @@ export const StatusVideo = props => {
 }
 
 export const StatusAudio = props => {
-  return <audio src={props.media.url} controls />
+  return (
+    <AudioWrapper>
+      <audio src={props.media.url} controls />
+    </AudioWrapper>
+  )
 }
 
 export const StatusGif = props => {
