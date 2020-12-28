@@ -1,6 +1,7 @@
 {
     "conventionalCommits.scopes": [
         "routing",
-        "timeline"
+        "timeline",
+        "user page"
     ]
 }

@@ -7,17 +7,19 @@ import HtmlRenderer from './HtmlRenderer'
 
 const Header = styled.header`
   width: 100%;
-  height: 200px;
+  height: 250px;
   padding: 1rem;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin: 0 auto;
+  box-shadow: 0px 2.5px 2px -3px var(--shadowColor);
+  overflow: hidden;
 `
 
 const Avatar = styled.div`
-  width: 100px;
-  height: 100px;
+  width: 125px;
+  height: 125px;
   border-radius: 50%;
   overflow: hidden;
   & img {
@@ -25,11 +27,28 @@ const Avatar = styled.div`
   }
 `
 
+const Username = styled.h2`
+  margin: 0;
+  margin-bottom: 1.25rem;
+  font-size: 1.6rem;
+`
+
+const DisplayName = styled.h5`
+  font-size: 1.2rem;
+  margin: 0;
+`
+
 const UserData = styled.div`
+  max-width: 400px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: space-between;
+`
+
+const Note = styled.div`
+  max-width: 400px;
+  text-align: right;
 `
 
 const UserCounts = styled.div`
@@ -59,9 +78,7 @@ const UserHeader = props => {
     setUser(account)
   }
 
-  if (!user) return <div style="height:200px"></div>
-
-  // console.log(user)
+  if (!user) return <div style="height:250px"></div>
 
   const {
     avatar,
@@ -85,15 +102,16 @@ const UserHeader = props => {
           <img src={avatar} alt={username + "'s avatar"} />
         </Avatar>
         <UserData>
-          <h1>{username}</h1>
+          <Username>{'@' + username}</Username>
           <UserCounts>
             <p>{statusesCount} <span>posts</span></p>
             <p>{followersCount} <span>followers</span></p>
             <p>{followingCount} <span>following</span></p>
           </UserCounts>
-          <div>
-          <HtmlRenderer content={note}/>
-          </div>
+          <Note>
+            <DisplayName>{displayName}</DisplayName>
+            <HtmlRenderer content={note}/>
+          </Note>
         </UserData>
       </Header>
       
