@@ -1,6 +1,6 @@
-import { Preferences } from '../../prefs'
 import styled from 'styled-components'
 import { useContext } from 'preact/hooks'
+import { usePreference } from '../../prefs'
 
 // Center inner image vertically
 const MediaImageWrapper = styled.div`
@@ -49,13 +49,11 @@ const AudioWrapper = styled.div`
 `
 
 export const StatusImage = props => {
-  const {
-    preferences: { disableBackgroundBlur }
-  } = useContext(Preferences)
+  const [enableBackgroundBlur] = usePreference('enableBackgroundBlur')
 
   return (
     <div>
-      {!disableBackgroundBlur && (
+      {enableBackgroundBlur && (
         <MediaImageBackgroundBlur src={props.media.url} />
       )}
       <MediaImageWrapper>

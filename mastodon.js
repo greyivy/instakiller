@@ -4,12 +4,33 @@ import { useEffect, useState } from 'preact/hooks'
 import CenteredSpinner from './components/CenteredSpinner'
 import { Masto } from 'masto'
 import { createContext } from 'preact'
+import history from 'history/browser'
 import toaster from './components/toaster'
 
 const MastodonInstance = createContext(null)
 
 const MastodonInstanceWrapper = props => {
-  const { uri, accessToken } = props
+  const { account } = props
+
+  if (!account) {
+    return (
+      <NonIdealState
+        icon='user'
+        title='No account'
+        description='Please add a Mastodon account before continuing'
+        action={
+          <Button
+            intent={Intent.PRIMARY}
+            onClick={() => history.replace('/settings')}
+          >
+            Add account
+          </Button>
+        }
+      />
+    )
+  }
+
+  const { uri, accessToken } = account
 
   const [error, setError] = useState(null)
   const [value, setValue] = useState(null)

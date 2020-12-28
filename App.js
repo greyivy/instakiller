@@ -1,28 +1,29 @@
 import {
   Alignment,
   Button,
+  Intent,
   Menu,
   Navbar,
+  NonIdealState,
   PanelStack,
   Popover,
   Position
 } from '@blueprintjs/core'
-import { MastodonInstance, MastodonInstanceWrapper } from './mastodon'
-import { useContext, useEffect, useState } from 'preact/hooks'
+import { useEffect, useState } from 'preact/hooks'
 
 import { Action } from 'history'
-import { Preferences } from './prefs'
 import Settings from './components/Settings'
 import VirtualizedTimeline from './components/VirtualizedTimeline'
 import history from 'history/browser'
 import { match } from 'path-to-regexp'
 import styled from 'styled-components'
+import { usePreference } from './prefs'
 
 const Wrapper = styled.div`
   padding-top: 50px;
 
   main {
-    height: calc(100vh - ${props => (props.isSubPage ? 50 : 100)}px);
+    height: calc(100vh - 100px);
   }
   .bp3-panel-stack {
     height: 100%;
@@ -65,21 +66,32 @@ const routes = [
   }
 ]
 
-const getRoutePanel = path => {
-  const { path: routePath, component, defaultParams } = routes.find(route => {
-    return match(route.path)(path)
-  })
-
-  const { params } = match(routePath)(path)
-
-  return { component, props: { params: { ...defaultParams, ...params } } }
-}
-
+// Determines if current browser location matches a specific route
 const isMatch = path => match(path)(location.pathname)
 
 function App (props) {
+  const [accounts] = usePreference('accounts')
+  const [currentAccount, setCurrentAccount] = useState(accounts[0])
+
+  // Gets a panel (component and props) for a specific route
+  const getRoutePanel = path => {
+    const { path: routePath, component, defaultParams } = routes.find(route => {
+      return match(route.path)(path)
+    })
+
+    const { params } = match(routePath)(path)
+
+    return {
+      component,
+      props: {
+        account: currentAccount,
+        params: { ...defaultParams, ...params }
+      }
+    }
+  }
+
   const [panels, setPanels] = useState([
-    getRoutePanel(window.location.pathname)
+    getRoutePanel(window.location.pathname) // Default panel on page load
   ])
 
   useEffect(() => {
@@ -87,15 +99,19 @@ function App (props) {
     const unlisten = history.listen(({ location, action }) => {
       const panel = getRoutePanel(location.pathname)
 
+      // Manipulate panels based on history action (push, pop, replace)
       if (action === Action.Push) {
+        // Push stacks a new panel on top
         setPanels([...panels, panel])
       } else if (action === Action.Pop) {
+        // Pop closes the topmost panel
         if (panels.length > 1) {
           setPanels(panels.slice(0, panels.length - 1))
         } else {
           setPanels([panel])
         }
       } else if (action === Action.Replace) {
+        // Replace replaces the current panel stack
         setPanels([panel])
       }
 
@@ -105,14 +121,39 @@ function App (props) {
     return () => unlisten()
   }, [panels])
 
+  useEffect(() => {
+    if (!currentAccount && accounts.length > 0) {
+      // If no account is selected and there is an account available, select it
+      setCurrentAccount(accounts[0])
+    } else if (accounts.length === 0) {
+      // Otherwise, select no account
+      setCurrentAccount(null)
+    }
+  }, [accounts.length, currentAccount])
+
+  useEffect(() => {
+    // Change all panel accounts when the selected account changes
+    setPanels(
+      panels.map(panel => ({
+        ...panel,
+        props: {
+          ...panel.props,
+          account: currentAccount
+        }
+      }))
+    )
+  }, [currentAccount])
+
+  // Go home
   const home = () => {
     history.replace('/')
   }
 
   const isSubPage = panels.length > 1
+  const hasAccount = !!currentAccount
 
   return (
-    <Wrapper isSubPage={isSubPage}>
+    <Wrapper>
       <Navbar fixedToTop>
         <Navbar.Group align={Alignment.LEFT}>
           {isSubPage && (
@@ -126,24 +167,33 @@ function App (props) {
               <Navbar.Divider />
             </>
           )}
-          {!isSubPage && (
+          {!isSubPage && accounts.length > 0 && (
             <Popover
               content={
                 <Menu>
-                  <Menu.Item onClick={() => {}} text='username' active />
+                  {accounts.map(account => (
+                    <Menu.Item
+                      key={account.id}
+                      onClick={() => setCurrentAccount(account)}
+                      text={account.uri}
+                      active={
+                        currentAccount && currentAccount.id === account.id
+                      }
+                    />
+                  ))}
                 </Menu>
               }
               position={Position.BOTTOM_LEFT}
             >
               <Navbar.Heading>
                 <Button minimal rightIcon='chevron-down'>
-                  username
+                  {currentAccount ? currentAccount.uri : 'Accounts'}
                 </Button>
               </Navbar.Heading>
             </Popover>
           )}
         </Navbar.Group>
-        {!isSubPage && (
+        {!isSubPage && hasAccount && (
           <Navbar.Group align={Alignment.RIGHT}>
             <Button
               minimal
@@ -154,28 +204,21 @@ function App (props) {
           </Navbar.Group>
         )}
       </Navbar>
-
       <main>
-        <MastodonInstanceWrapper
-          uri='https://mastodon.online'
-          accessToken='IWMnNA345JVckwU1QljWhNCbMD4wRar4JfgX_WuxItY'
-        >
-          <PanelStack
-            onOpen={panel => {
-              setPanels([panel, ...panels])
-            }}
-            onClose={() => {
-              setPanels(panels.slice(1))
-            }}
-            renderActivePanelOnly={false}
-            showPanelHeader={false}
-            stack={panels}
-          />
-        </MastodonInstanceWrapper>
+        <PanelStack
+          onOpen={panel => {
+            setPanels([panel, ...panels])
+          }}
+          onClose={() => {
+            setPanels(panels.slice(1))
+          }}
+          renderActivePanelOnly={false}
+          showPanelHeader={false}
+          stack={panels}
+        />
       </main>
-
-      {!isSubPage && (
-        <Navbar style={{ position: 'fixed', bottom: 0 }}>
+      <Navbar style={{ position: 'fixed', bottom: 0 }}>
+        {!isSubPage && (
           <Navbar.Group align={null} style={{ justifyContent: 'space-evenly' }}>
             <Button
               minimal
@@ -218,8 +261,9 @@ function App (props) {
               intent={isMatch('/settings') ? 'primary' : ''}
             />
           </Navbar.Group>
-        </Navbar>
-      )}
+        )}
+      </Navbar>
+      )
     </Wrapper>
   )
 }

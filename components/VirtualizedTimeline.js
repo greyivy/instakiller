@@ -6,11 +6,11 @@ import {
   List
 } from 'react-virtualized'
 import { Button, Intent, NonIdealState, Spinner } from '@blueprintjs/core'
+import { MastodonInstance, MastodonInstanceWrapper } from '../mastodon'
 import { useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 
 import CenteredSpinner from './CenteredSpinner'
 import HtmlRenderer from './HtmlRenderer'
-import { MastodonInstance } from '../mastodon'
 import MediaRenderer from './media-components/MediaRenderer'
 import Status from './Status'
 import UserHeader from './UserHeader'
@@ -32,7 +32,7 @@ const CaptionWrapper = styled.div`
 
 const VirtualizedTimeline = props => {
   const [error, setError] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [hasMore, setHasMore] = useState(false)
   const [items, setItems] = useState([])
 
@@ -217,4 +217,10 @@ const VirtualizedTimeline = props => {
   )
 }
 
-export default VirtualizedTimeline
+const VirtualizedTimelineWrapper = props => (
+  <MastodonInstanceWrapper account={props.account}>
+    <VirtualizedTimeline {...props} />
+  </MastodonInstanceWrapper>
+)
+
+export default VirtualizedTimelineWrapper

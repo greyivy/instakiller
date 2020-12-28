@@ -5,7 +5,13 @@ import { PreferencesWrapper } from './prefs'
 import { render } from 'preact'
 
 render(
-  <PreferencesWrapper>
+  <PreferencesWrapper
+    default={{
+      accounts: [],
+      enableBackgroundBlur: true,
+      profileTheme: 'twitter'
+    }}
+  >
     <App />
   </PreferencesWrapper>,
   document.getElementById('App')

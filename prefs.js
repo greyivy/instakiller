@@ -1,5 +1,4 @@
-import { Button, Intent, NonIdealState } from '@blueprintjs/core'
-import { useEffect, useMemo, useState } from 'preact/hooks'
+import { useContext, useEffect, useMemo, useState } from 'preact/hooks'
 
 import { createContext } from 'preact'
 
@@ -8,23 +7,24 @@ const Preferences = createContext({})
 const KEY = 'preferences'
 
 const PreferencesWrapper = props => {
-  const [preferences, setPreferences] = useState(
-    localStorage.getItem(KEY) ? JSON.parse(localStorage.getItem(KEY)) : {}
-  )
+  // On load, read the preferences from localstorage and add any missing defaults
+  const [preferences, setPreferences] = useState({
+    ...props.default,
+    ...(window.localStorage.getItem(KEY)
+      ? JSON.parse(window.localStorage.getItem(KEY))
+      : {})
+  })
 
-  const setPreference = useMemo(() => (key, value) =>
-    setPreferences({ ...preferences, [key]: value })
-  )
-
+  // When preferences changes, update localStorage
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(preferences))
+    window.localStorage.setItem(KEY, JSON.stringify(preferences))
   }, [preferences])
 
   return (
     <Preferences.Provider
       value={{
         preferences,
-        setPreference
+        setPreferences
       }}
     >
       {props.children}
@@ -32,4 +32,19 @@ const PreferencesWrapper = props => {
   )
 }
 
-export { PreferencesWrapper, Preferences }
+const usePreference = key => {
+  const { preferences, setPreferences } = useContext(Preferences)
+
+  const value = Object.prototype.hasOwnProperty.call(preferences, key)
+    ? preferences[key]
+    : null
+
+  const setter = useMemo(
+    () => value => setPreferences({ ...preferences, [key]: value }),
+    [preferences, setPreferences]
+  )
+
+  return [value, setter]
+}
+
+export { PreferencesWrapper, Preferences, usePreference }
