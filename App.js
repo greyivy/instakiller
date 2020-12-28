@@ -1,28 +1,35 @@
 import {
   Alignment,
   Button,
-  Callout,
-  Icon,
-  Intent,
   Menu,
   Navbar,
   PanelStack,
   Popover,
-  Position,
-  Spinner
+  Position
 } from '@blueprintjs/core'
-import { Component, Fragment, h, render } from 'preact'
 import { MastodonInstance, MastodonInstanceWrapper } from './mastodon'
-import { useContext, useEffect, useMemo, useState } from 'preact/hooks'
+import { useContext, useEffect, useState } from 'preact/hooks'
 
 import { Action } from 'history'
-import Timeline from './components/Timeline'
 import VirtualizedTimeline from './components/VirtualizedTimeline'
 import history from 'history/browser'
 import { match } from 'path-to-regexp'
 import styled from 'styled-components'
 
-// const TestComponent = (props = <div>test</div>)
+const Wrapper = styled.div`
+  padding-top: 50px;
+
+  main {
+    height: calc(100vh - ${props => (props.isSubPage ? 50 : 100)}px);
+  }
+  .bp3-panel-stack {
+    height: 100%;
+
+    .bp3-panel-stack-view {
+      background: none;
+    }
+  }
+`
 
 const routes = [
   {
@@ -31,27 +38,19 @@ const routes = [
   },
   {
     path: '/user/:userId?',
-    component: Timeline,
+    component: VirtualizedTimeline,
     props: {
       type: 'user'
     }
   },
   {
     path: '/',
-    component: Timeline,
+    component: VirtualizedTimeline,
     props: {
       type: 'home'
     }
   }
 ]
-
-const Wrapper = styled.div`
-  padding-top: 50px;
-
-  .bp3-panel-stack {
-    height: calc(100vh - ${props => props.isSubPage ? 50 : 100}px);
-  }
-`
 
 const getRoutePanel = path => {
   const { path: routePath, component, props } = routes.find(route => {
@@ -97,8 +96,6 @@ function App (props) {
     history.replace('/')
   }
 
-  const { user } = useContext(MastodonInstance)
-
   const isSubPage = panels.length > 1
 
   return (
@@ -120,14 +117,14 @@ function App (props) {
             <Popover
               content={
                 <Menu>
-                  <Menu.Item onClick={() => {}} text={user.username} active />
+                  <Menu.Item onClick={() => {}} text='username' active />
                 </Menu>
               }
               position={Position.BOTTOM_LEFT}
             >
               <Navbar.Heading>
                 <Button minimal rightIcon='chevron-down'>
-                  {user.username}
+                  username
                 </Button>
               </Navbar.Heading>
             </Popover>
@@ -145,17 +142,24 @@ function App (props) {
         )}
       </Navbar>
 
-      <PanelStack
-        onOpen={panel => {
-          setPanels([panel, ...panels])
-        }}
-        onClose={() => {
-          setPanels(panels.slice(1))
-        }}
-        renderActivePanelOnly={false}
-        showPanelHeader={false}
-        stack={panels}
-      />
+      <main>
+        <MastodonInstanceWrapper
+          uri='https://mastodon.online'
+          accessToken='IWMnNA345JVckwU1QljWhNCbMD4wRar4JfgX_WuxItY'
+        >
+          <PanelStack
+            onOpen={panel => {
+              setPanels([panel, ...panels])
+            }}
+            onClose={() => {
+              setPanels(panels.slice(1))
+            }}
+            renderActivePanelOnly={false}
+            showPanelHeader={false}
+            stack={panels}
+          />
+        </MastodonInstanceWrapper>
+      </main>
 
       {!isSubPage && (
         <Navbar style={{ position: 'fixed', bottom: 0 }}>

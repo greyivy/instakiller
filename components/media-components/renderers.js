@@ -1,27 +1,7 @@
-import { Component, Fragment, createElement, h, render } from 'preact'
-
 import styled from 'styled-components'
 
-// Ensure media is always in 1:1 aspect ratio
-const MediaWrapper = styled.div`
-  max-width: 100%;
-  padding-top: 100%;
-  position: relative;
-  overflow: hidden;
-  background: ${props => props.background};
-
-  & > video {
-    max-width: 100%;
-    max-height: 100%;
-    position: absolute;
-    top: 0;
-    width: 100%;
-    height: 100%;
-  }
-`
-
-// Center inner media vertically
-const MediaInner = styled.div`
+// Center inner image vertically
+const MediaImageWrapper = styled.div`
   position: absolute;
   top: 0;
   width: 100%;
@@ -32,7 +12,7 @@ const MediaInner = styled.div`
 `
 
 // Pretty blurred background
-const MediaImageBackground = styled.div`
+const MediaImageBackgroundBlur = styled.div`
   position: absolute;
   top: -16px;
   left: -16px;
@@ -54,31 +34,23 @@ const MediaImage = styled.div`
   height: 100%;
 `
 
-const AudioWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
+const MediaVideo = styled.video`
+  background: #000;
 `
 
 export const StatusImage = props => {
   return (
-    <MediaWrapper>
-      <MediaImageBackground src={props.media.url} />
-      <MediaInner>
+    <div>
+      <MediaImageBackgroundBlur src={props.media.url} />
+      <MediaImageWrapper>
         <MediaImage src={props.media.url} title={props.media.description} />
-      </MediaInner>
-    </MediaWrapper>
+      </MediaImageWrapper>
+    </div>
   )
 }
 
 export const StatusVideo = props => {
-  return (
-    <MediaWrapper background='#000'>
-      <video src={props.media.url} controls />
-    </MediaWrapper>
-  )
+  return <MediaVideo src={props.media.url} controls />
 }
 
 export const StatusAudio = props => {
@@ -89,6 +61,11 @@ export const StatusAudio = props => {
   )
 }
 
+// TODO test
 export const StatusGif = props => {
-  return <img src={props.media.url} alt={props.media.description} />
+  return (
+    <MediaImageWrapper>
+      <MediaImage src={props.media.url} title={props.media.description} />
+    </MediaImageWrapper>
+  )
 }
