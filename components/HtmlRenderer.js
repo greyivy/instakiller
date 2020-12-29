@@ -36,8 +36,8 @@ const tagMap = {
     if (props.context && className?.includes('mention')) {
       const data = children[1]?.children[0]?.data
 
-      if (rel === 'tag') {
-        return <Hashtag name='data'>{renderedChildren}</Hashtag>
+      if (className.includes('hashtag')) {
+        return <Hashtag name={data}>{renderedChildren}</Hashtag>
       } else {
         const mention = props.context.mentions.find(
           mention => mention.username === data
