@@ -54,6 +54,13 @@ const routes = [
     }
   },
   {
+    path: '/hashtag/:name',
+    component: VirtualizedTimeline,
+    defaultParams: {
+      type: 'hashtag'
+    }
+  },
+  {
     path: '/settings',
     component: Settings
   },

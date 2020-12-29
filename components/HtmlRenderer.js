@@ -1,4 +1,5 @@
 import { createElement } from 'preact'
+import history from 'history/browser'
 import parse from 'html-dom-parser'
 
 const getCircularReplacer = () => {
@@ -17,24 +18,76 @@ const getCircularReplacer = () => {
 const tagMap = {
   p: props => (
     <p>
-      <HtmlRenderer tags={props.children} />
+      <HtmlRenderer tags={props.children} context={props.context} />
     </p>
   ),
-  a: props => (
-    <a href={props.attribs.href} target={props.attribs.target}>
-      <HtmlRenderer tags={props.children} />
-    </a>
-  ),
+  a: props => {
+    const {
+      children,
+      attribs: { href, class: className, rel }
+    } = props
+
+    const renderedChildren = (
+      <HtmlRenderer tags={children} context={props.context} />
+    )
+
+    // Detect mentions
+    if (props.context && className?.includes('mention')) {
+      const data = children[1]?.children[0]?.data
+
+      if (rel === 'tag') {
+        const href = `/hashtag/${data}`
+
+        return (
+          <a
+            onClick={e => {
+              e.preventDefault() // Cancel browser navigation
+              history.push(href)
+            }}
+            href={href}
+          >
+            {renderedChildren}
+          </a>
+        )
+      } else {
+        const mention = props.context.mentions.find(
+          mention => mention.username === data
+        )
+
+        if (mention) {
+          const href = `/user/${mention.id}`
+
+          return (
+            <a
+              onClick={e => {
+                e.preventDefault() // Cancel browser navigation
+                history.push(href)
+              }}
+              href={href}
+            >
+              {renderedChildren}
+            </a>
+          )
+        }
+      }
+    }
+
+    return (
+      <a href={href} target='_blank' rel='noopener'>
+        {renderedChildren}
+      </a>
+    )
+  },
   br: () => <br />,
   span: props => (
     <span>
-      <HtmlRenderer tags={props.children} />
+      <HtmlRenderer tags={props.children} context={props.context} />
     </span>
   )
 }
 
 const HtmlRenderer = props => {
-  let { tags, content } = props
+  let { tags, content, context } = props
 
   if (!tags && content) {
     tags = parse(content)
@@ -48,7 +101,7 @@ const HtmlRenderer = props => {
     if (tag.type === 'text') {
       return tag.data
     } else if (tagMap[tag.name]) {
-      return createElement(tagMap[tag.name], tag)
+      return createElement(tagMap[tag.name], { ...tag, context })
     } else {
       return (
         <strong>

@@ -56,6 +56,8 @@ const VirtualizedTimeline = props => {
       timeline = masto.fetchAccountStatuses(params.userId)
     } else if (type === 'self') {
       timeline = masto.fetchAccountStatuses(user.id)
+    } else if (type === 'hashtag') {
+      timeline = masto.fetchTagTimeline(params.name)
     }
 
     return timeline
@@ -131,6 +133,8 @@ const VirtualizedTimeline = props => {
     header = <UserHeader userId={params.userId} />
   } else if (type === 'self') {
     header = <UserHeader userId={user.id} self />
+  } else if (type === 'hashtag') {
+    header = <div>{params.name}</div>
   }
 
   // TODO accessibility https://github.com/bvaughn/react-virtualized/blob/master/docs/ArrowKeyStepper.md
@@ -181,6 +185,17 @@ const VirtualizedTimeline = props => {
                 }
                 rowRenderer={({ index, key, style, parent }) => {
                   const item = items[index]
+                  let rebloggedItem = item
+
+                  // Get deepest reblog
+                  // TODO
+                  let isReblog = false
+                  while (rebloggedItem.reblog) {
+                    rebloggedItem = rebloggedItem.reblog
+                    isReblog = true
+                  }
+
+                  const displayItem = isReblog ? rebloggedItem : item
 
                   return (
                     <CellMeasurer
@@ -195,12 +210,22 @@ const VirtualizedTimeline = props => {
                           {index === 0 && (
                             <HeaderWrapper>{header}</HeaderWrapper>
                           )}
-                          <Status account={item.account}>
-                            <MediaRenderer media={item.mediaAttachments} />
+                          <Status
+                            account={item.account}
+                            rebloggedAccount={isReblog && rebloggedItem.account}
+                          >
+                            <MediaRenderer
+                              media={displayItem.mediaAttachments}
+                            />
 
-                            <CaptionWrapper>
-                              <HtmlRenderer content={item.content} />
-                            </CaptionWrapper>
+                            {displayItem.content && (
+                              <CaptionWrapper>
+                                <HtmlRenderer
+                                  content={displayItem.content}
+                                  context={displayItem}
+                                />
+                              </CaptionWrapper>
+                            )}
                           </Status>
                         </ItemContainer>
                       </div>
