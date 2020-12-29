@@ -1,6 +1,7 @@
 import {
   Alignment,
   Button,
+  Classes,
   Intent,
   Menu,
   Navbar,
@@ -23,7 +24,7 @@ const Wrapper = styled.div`
   padding-top: 50px;
 
   main {
-    height: calc(100vh - 100px);
+    height: calc(100vh - 50px);
   }
   .bp3-panel-stack {
     height: 100%;
@@ -32,6 +33,19 @@ const Wrapper = styled.div`
       background: var(--bg);
     }
   }
+`
+
+const SlidingNavBar = styled(Navbar)`
+  position: fixed;
+  bottom: 0;
+  transform: ${props => (props.visible ? 'translateY(50px);' : 'none')};
+  transition: 0.5s all
+    ${(
+      props // Switch between easeInQuart and easeOutQuart
+    ) =>
+      props.visible
+        ? 'cubic-bezier(0.165, 0.840, 0.440, 1.000)'
+        : 'cubic-bezier(0.895, 0.030, 0.685, 0.220)'};
 `
 
 const routes = [
@@ -166,7 +180,7 @@ function App (props) {
           {isSubPage && (
             <>
               <Button
-                className='bp3-minimal'
+                className={Classes.MINIMAL}
                 icon='arrow-left'
                 text='Back'
                 onClick={() => history.back()}
@@ -224,52 +238,50 @@ function App (props) {
           stack={panels}
         />
       </main>
-      <Navbar style={{ position: 'fixed', bottom: 0 }}>
-        {!isSubPage && (
-          <Navbar.Group align={null} style={{ justifyContent: 'space-evenly' }}>
-            <Button
-              minimal
-              fill
-              icon='home'
-              title='Following'
-              onClick={() => home()}
-              intent={isMatch('/') ? 'primary' : ''}
-            />
-            <Button
-              minimal
-              fill
-              icon='people'
-              title='Local timeline'
-              onClick={() => history.replace('/timeline/local')}
-              intent={isMatch('/timeline/local') ? 'primary' : ''}
-            />
-            <Button
-              minimal
-              fill
-              icon='globe-network'
-              title='Federated timeline'
-              onClick={() => history.replace('/timeline/federated')}
-              intent={isMatch('/timeline/federated') ? 'primary' : ''}
-            />
-            <Button
-              minimal
-              fill
-              icon='user'
-              title='Profile'
-              onClick={() => history.replace('/user')}
-              intent={isMatch('/user') ? 'primary' : ''}
-            />
-            <Button
-              minimal
-              fill
-              icon='settings'
-              title='Settings'
-              onClick={() => history.replace('/settings')}
-              intent={isMatch('/settings') ? 'primary' : ''}
-            />
-          </Navbar.Group>
-        )}
-      </Navbar>
+      <SlidingNavBar visible={isSubPage}>
+        <Navbar.Group align={null} style={{ justifyContent: 'space-evenly' }}>
+          <Button
+            minimal
+            fill
+            icon='home'
+            title='Following'
+            onClick={() => home()}
+            intent={isMatch('/') ? 'primary' : ''}
+          />
+          <Button
+            minimal
+            fill
+            icon='people'
+            title='Local timeline'
+            onClick={() => history.replace('/timeline/local')}
+            intent={isMatch('/timeline/local') ? 'primary' : ''}
+          />
+          <Button
+            minimal
+            fill
+            icon='globe-network'
+            title='Federated timeline'
+            onClick={() => history.replace('/timeline/federated')}
+            intent={isMatch('/timeline/federated') ? 'primary' : ''}
+          />
+          <Button
+            minimal
+            fill
+            icon='user'
+            title='Profile'
+            onClick={() => history.replace('/user')}
+            intent={isMatch('/user') ? 'primary' : ''}
+          />
+          <Button
+            minimal
+            fill
+            icon='settings'
+            title='Settings'
+            onClick={() => history.replace('/settings')}
+            intent={isMatch('/settings') ? 'primary' : ''}
+          />
+        </Navbar.Group>
+      </SlidingNavBar>
       )
     </Wrapper>
   )

@@ -3,6 +3,7 @@ import {
   Button,
   Callout,
   Card,
+  Classes,
   ControlGroup,
   FormGroup,
   H2,
@@ -148,7 +149,9 @@ const Settings = props => {
         />
       </Card>
 
-      <pre class='bp3-code-block'>{JSON.stringify(preferences, null, 2)}</pre>
+      <pre className={Classes.CODE_BLOCK}>
+        {JSON.stringify(preferences, null, 2)}
+      </pre>
     </Container>
   )
 }

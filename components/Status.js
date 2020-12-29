@@ -1,5 +1,13 @@
-import history from 'history/browser'
+import { Classes, Icon } from '@blueprintjs/core'
+
+import Avatar from './Avatar'
+import { Mention } from './Mention'
+import RouterLink from './RouterLink'
 import styled from 'styled-components'
+
+const RebloggedByWrapper = styled.div`
+  font-size: 1.2rem;
+`
 
 const StatusWrapper = styled.div`
   width: 100%;
@@ -13,6 +21,7 @@ const StatusWrapper = styled.div`
     margin: 1rem 0;
   }
 `
+
 const StatusHeader = styled.header`
   display: flex;
   align-items: center;
@@ -21,92 +30,36 @@ const StatusHeader = styled.header`
   margin: 0;
   box-shadow: 0px 2.5px 2px -3px var(--shadowColor);
 
-  a {
-    font-size: 1.2rem;
-    color: black;
-    margin: 0;
-  }
+  font-size: 1.2rem;
 `
-
-const Avatar = styled.div`
-  width: 50px;
-  height: 50px;
-  position: relative;
-
-  a {
-    > img {
-      width: 100%;
-      height: auto;
-      border-radius: 50%;
-    }
-
-    :nth-child(2) {
-      position: absolute;
-      top: 28px;
-      left: 32px;
-
-      > img {
-        width: 25px;
-        height: auto;
-        border: 2px solid #fff;
-      }
-    }
-  }
-`
-
 const ContentWrapper = styled.div`
   width: 100%;
 `
 
 const Status = props => {
-  const { account, rebloggedAccount } = props
+  const { account, secondaryAccount } = props
 
-  const { id, username, url, avatarStatic, bot } = account
-
-  if (rebloggedAccount) {
-    // Reblog
-    return (
+  return (
+    <>
+      {secondaryAccount && (
+        <RebloggedByWrapper className={Classes.TEXT_MUTED}>
+          <Icon
+            icon='refresh'
+            style={{ marginBottom: 3, marginRight: 6, verticalAlign: 'middle' }}
+          />
+          <Mention account={secondaryAccount} /> boosted
+        </RebloggedByWrapper>
+      )}
       <StatusWrapper style={props.style}>
         <StatusHeader>
-          <Avatar>
-            <a onClick={() => history.push(`/user/${id}`)}>
-              <img src={avatarStatic} alt={username + 's avatar'} />
-            </a>
-            <a onClick={() => history.push(`/user/${rebloggedAccount.id}`)}>
-              <img
-                src={avatarStatic}
-                alt={rebloggedAccount.username + 's avatar'}
-              />
-            </a>
-          </Avatar>
-          <div>
-            <a onClick={() => history.push(`/user/${id}`)}>{'@' + username}</a>
-            <div>
-              via{' '}
-              <a onClick={() => history.push(`/user/${rebloggedAccount.id}`)}>
-                {'@' + rebloggedAccount.username}
-              </a>
-            </div>
-          </div>
+          <Avatar account={account} secondaryAccount={secondaryAccount} />
+
+          <Mention account={account} />
         </StatusHeader>
         <ContentWrapper>{props.children}</ContentWrapper>
       </StatusWrapper>
-    )
-  } else {
-    return (
-      <StatusWrapper style={props.style}>
-        <StatusHeader>
-          <Avatar>
-            <a onClick={() => history.push(`/user/${id}`)}>
-              <img src={avatarStatic} alt={username + 's avatar'} />
-            </a>
-          </Avatar>
-          <a onClick={() => history.push(`/user/${id}`)}>{'@' + username}</a>
-        </StatusHeader>
-        <ContentWrapper>{props.children}</ContentWrapper>
-      </StatusWrapper>
-    )
-  }
+    </>
+  )
 }
 
 export default Status

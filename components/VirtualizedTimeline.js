@@ -184,18 +184,18 @@ const VirtualizedTimeline = props => {
                   )
                 }
                 rowRenderer={({ index, key, style, parent }) => {
-                  const item = items[index]
-                  let rebloggedItem = item
+                  const originalItem = items[index]
+                  let rebloggedItem = originalItem
 
                   // Get deepest reblog
-                  // TODO
+                  // TODO do we need to go down the tree?
                   let isReblog = false
                   while (rebloggedItem.reblog) {
                     rebloggedItem = rebloggedItem.reblog
                     isReblog = true
                   }
 
-                  const displayItem = isReblog ? rebloggedItem : item
+                  const displayItem = isReblog ? rebloggedItem : originalItem
 
                   return (
                     <CellMeasurer
@@ -211,8 +211,8 @@ const VirtualizedTimeline = props => {
                             <HeaderWrapper>{header}</HeaderWrapper>
                           )}
                           <Status
-                            account={item.account}
-                            rebloggedAccount={isReblog && rebloggedItem.account}
+                            account={displayItem.account}
+                            secondaryAccount={isReblog && originalItem.account}
                           >
                             <MediaRenderer
                               media={displayItem.mediaAttachments}

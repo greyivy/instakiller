@@ -1,9 +1,9 @@
 import { useContext, useEffect, useState } from 'preact/hooks'
 
+import Avatar from './Avatar'
+import HtmlRenderer from './HtmlRenderer'
 import { MastodonInstance } from '../mastodon'
 import styled from 'styled-components'
-
-import HtmlRenderer from './HtmlRenderer'
 
 const Header = styled.header`
   width: 100%;
@@ -15,16 +15,6 @@ const Header = styled.header`
   margin: 0 auto;
   box-shadow: 0px 2.5px 2px -3px var(--shadowColor);
   overflow: hidden;
-`
-
-const Avatar = styled.div`
-  width: 125px;
-  height: 125px;
-  border-radius: 50%;
-  overflow: hidden;
-  & img {
-    width: 100%;
-  }
 `
 
 const Username = styled.h2`
@@ -56,8 +46,8 @@ const UserCounts = styled.div`
   justify-content: center;
   align-items: center;
   & > p {
-    margin-left:.5rem;
-    font-size:1rem; 
+    margin-left: 0.5rem;
+    font-size: 1rem;
     & > span {
       font-weight: bolder;
     }
@@ -78,7 +68,7 @@ const UserHeader = props => {
     setUser(account)
   }
 
-  if (!user) return <div style="height:250px"></div>
+  if (!user) return <div style='height:250px'></div>
 
   const {
     avatar,
@@ -98,23 +88,26 @@ const UserHeader = props => {
   return (
     <div>
       <Header>
-        <Avatar>
-          <img src={avatar} alt={username + "'s avatar"} />
-        </Avatar>
+        <Avatar size={125} account={user}></Avatar>
         <UserData>
           <Username>{'@' + username}</Username>
           <UserCounts>
-            <p>{statusesCount} <span>posts</span></p>
-            <p>{followersCount} <span>followers</span></p>
-            <p>{followingCount} <span>following</span></p>
+            <p>
+              {statusesCount} <span>posts</span>
+            </p>
+            <p>
+              {followersCount} <span>followers</span>
+            </p>
+            <p>
+              {followingCount} <span>following</span>
+            </p>
           </UserCounts>
           <Note>
             <DisplayName>{displayName}</DisplayName>
-            <HtmlRenderer content={note}/>
+            <HtmlRenderer content={note} />
           </Note>
         </UserData>
       </Header>
-      
     </div>
   )
 }

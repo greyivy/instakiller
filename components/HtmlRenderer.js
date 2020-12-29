@@ -1,5 +1,6 @@
+import { Hashtag, Mention } from './Mention'
+
 import { createElement } from 'preact'
-import history from 'history/browser'
 import parse from 'html-dom-parser'
 
 const getCircularReplacer = () => {
@@ -36,42 +37,19 @@ const tagMap = {
       const data = children[1]?.children[0]?.data
 
       if (rel === 'tag') {
-        const href = `/hashtag/${data}`
-
-        return (
-          <a
-            onClick={e => {
-              e.preventDefault() // Cancel browser navigation
-              history.push(href)
-            }}
-            href={href}
-          >
-            {renderedChildren}
-          </a>
-        )
+        return <Hashtag name='data'>{renderedChildren}</Hashtag>
       } else {
         const mention = props.context.mentions.find(
           mention => mention.username === data
         )
 
         if (mention) {
-          const href = `/user/${mention.id}`
-
-          return (
-            <a
-              onClick={e => {
-                e.preventDefault() // Cancel browser navigation
-                history.push(href)
-              }}
-              href={href}
-            >
-              {renderedChildren}
-            </a>
-          )
+          return <Mention account={mention}>{renderedChildren}</Mention>
         }
       }
     }
 
+    // External link
     return (
       <a href={href} target='_blank' rel='noopener'>
         {renderedChildren}

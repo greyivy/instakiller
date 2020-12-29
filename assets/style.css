@@ -14,7 +14,15 @@ body {
   margin: 0;
   padding: 0;
   background: var(--bg);
+  overflow: hidden;
 }
 p {
   font-size: 1.1rem;
+}
+
+.ReactVirtualized__List {
+  scrollbar-width: none;
+}
+.ReactVirtualized__List::-webkit-scrollbar {
+  display: none;
 }
