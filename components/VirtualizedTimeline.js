@@ -127,22 +127,19 @@ const VirtualizedTimeline = props => {
     }
   }
 
+  const measureHeader = () => {
+    // Remeasure from header on
+    cache.clear(0)
+    listRef.current?.recomputeRowHeights()
+  }
+
   let header = null
   if (type === 'user') {
-    header = (
-      <UserHeader
-        userId={params.userId}
-        measure={() => {
-          // Remeasure from header on
-          cache.clear(0)
-          listRef.current?.recomputeRowHeights()
-        }}
-      />
-    )
+    header = <UserHeader userId={params.userId} measure={measureHeader} />
   } else if (type === 'self') {
-    header = <UserHeader userId={user.id} self />
+    header = <UserHeader userId={user.id} self measure={measureHeader} />
   } else if (type === 'hashtag') {
-    header = <HashtagHeader name={params.name} />
+    header = <HashtagHeader name={params.name} measure={measureHeader} />
   }
 
   // TODO accessibility https://github.com/bvaughn/react-virtualized/blob/master/docs/ArrowKeyStepper.md
