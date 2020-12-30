@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { useState } from 'preact/hooks'
 
 const AvatarPrimary = styled(RouterLink)`
+  display: inline-block;
   background: url(${props => props.src});
   background-size: contain;
   border-radius: 50%;
@@ -26,19 +27,21 @@ const AvatarSecondary = styled.div`
   border: 2px solid var(--white);
 `
 
-const DEFAULT_SIZE = '50px'
+const DEFAULT_SIZE = '48px'
 const Avatar = props => {
-  const { account, secondaryAccount, size } = props
+  const { account, secondaryAccount, size, style } = props
 
   const [loaded, setLoaded] = useState(false)
   const [secondaryLoaded, setSecondaryLoaded] = useState(false)
 
+  // Determine CSS unit for the size prop
   const actualSize = size
     ? typeof size === 'number'
       ? `${size}px`
       : size
     : DEFAULT_SIZE
 
+  // Wait for avatars to load flly before displaying them
   const img = new window.Image()
   img.onload = () => setLoaded(true)
   img.src = account.avatarStatic
@@ -53,11 +56,13 @@ const Avatar = props => {
 
   return (
     <AvatarPrimary
-      src={allLoaded ? account.avatarStatic : ''}
+      push
       href={`/user/${account.id}`}
+      src={allLoaded ? account.avatarStatic : ''}
       title={`${account.username}'s avatar`}
       className={allLoaded ? '' : Classes.SKELETON}
       size={actualSize}
+      style={style}
     >
       {secondaryAccount && allLoaded && (
         <AvatarSecondary

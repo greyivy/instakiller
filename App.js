@@ -39,13 +39,7 @@ const SlidingNavBar = styled(Navbar)`
   position: fixed;
   bottom: 0;
   transform: ${props => (props.visible ? 'translateY(50px);' : 'none')};
-  transition: 0.5s all
-    ${(
-      props // Switch between easeInQuart and easeOutQuart
-    ) =>
-      props.visible
-        ? 'cubic-bezier(0.165, 0.840, 0.440, 1.000)'
-        : 'cubic-bezier(0.895, 0.030, 0.685, 0.220)'};
+  transition: 0.5s all cubic-bezier(0.165, 0.84, 0.44, 1);
 `
 
 const routes = [
@@ -175,7 +169,13 @@ function App (props) {
 
   return (
     <Wrapper>
-      <Navbar fixedToTop>
+      <Navbar
+        fixedToTop
+        onClick={e => {
+          const event = new window.Event('scrollTop')
+          document.dispatchEvent(event)
+        }}
+      >
         <Navbar.Group align={Alignment.LEFT}>
           {isSubPage && (
             <>

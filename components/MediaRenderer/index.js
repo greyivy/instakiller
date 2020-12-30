@@ -5,12 +5,13 @@ import { StatusAudio, StatusGif, StatusImage, StatusVideo } from './renderers'
 import { useEffect, useRef, useState } from 'preact/hooks'
 
 import Flickity from 'react-flickity-component'
+import TextRenderer from './TextRenderer'
 import { createElement } from 'preact'
 import styled from 'styled-components'
+import { usePreference } from '../../prefs'
 
 const FLICKITY_CLASSNAME = 'carousel'
 const MediaWrapper = styled.div`
-  margin-bottom: 0.5rem;
   box-shadow: 0px 2.5px 2px -3px var(--shadowColor); // Bottom border
   padding-top: 100%; // Ensure media is always 1:1 aspect ratio
   position: relative;
@@ -56,10 +57,6 @@ const attTypeMap = {
   unknown: null
 }
 
-const flickityOptions = {
-  initialIndex: 0
-}
-
 const renderMedia = media => {
   if (attTypeMap[media.type]) {
     return createElement(attTypeMap[media.type], {
@@ -72,13 +69,20 @@ const renderMedia = media => {
 }
 
 const MediaRenderer = props => {
-  const { media } = props
+  const { status } = props
+  const { mediaAttachments } = status
 
-  if (media.length === 0) return null
+  const [enableTextRenderer] = usePreference('enableTextRenderer')
 
-  if (media.length === 1) {
-    return <MediaWrapper>{renderMedia(media[0])}</MediaWrapper>
-  } else {
+  if (mediaAttachments.length === 0 && enableTextRenderer) {
+    return (
+      <MediaWrapper>
+        <TextRenderer status={status} />
+      </MediaWrapper>
+    )
+  } else if (mediaAttachments.length === 1) {
+    return <MediaWrapper>{renderMedia(mediaAttachments[0])}</MediaWrapper>
+  } else if (mediaAttachments.length > 0) {
     const [flickityIndex, setFlickityIndex] = useState(0)
     const flickityRef = useRef(null)
 
@@ -98,7 +102,7 @@ const MediaRenderer = props => {
     return (
       <MediaWrapper>
         <FlickityCounter>
-          {flickityIndex + 1}/{media.length}
+          {flickityIndex + 1}/{mediaAttachments.length}
         </FlickityCounter>
         <Flickity
           className={FLICKITY_CLASSNAME}
@@ -107,8 +111,8 @@ const MediaRenderer = props => {
             flickityRef.current = ref
           }}
         >
-          {media.map(media => (
-            <FlickitySlide>{renderMedia(media)}</FlickitySlide>
+          {mediaAttachments.map(media => (
+            <FlickitySlide key={media.id}>{renderMedia(media)}</FlickitySlide>
           ))}
         </Flickity>
       </MediaWrapper>

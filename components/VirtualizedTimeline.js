@@ -5,19 +5,18 @@ import {
   InfiniteLoader,
   List
 } from 'react-virtualized'
-import { Button, Intent, NonIdealState, Spinner } from '@blueprintjs/core'
+import { Button, Intent, NonIdealState } from '@blueprintjs/core'
 import { MastodonInstance, MastodonInstanceWrapper } from '../mastodon'
 import { useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 
 import CenteredSpinner from './CenteredSpinner'
-import HtmlRenderer from './HtmlRenderer'
-import MediaRenderer from './media-components/MediaRenderer'
+import HashtagHeader from './HashtagHeader'
 import Status from './Status'
 import UserHeader from './UserHeader'
 import styled from 'styled-components'
 import toaster from './toaster'
 
-const ItemContainer = styled.div`
+const StatusWrapper = styled.div`
   max-width: var(--containerWidth);
   margin: auto;
 `
@@ -26,22 +25,21 @@ const HeaderWrapper = styled.div`
   margin-bottom: 1rem;
 `
 
-const CaptionWrapper = styled.div`
-  padding: 0.75rem;
-`
-
 const VirtualizedTimeline = props => {
+  const { params } = props
+  const { type } = params
+
+  const listRef = useRef()
+
   const [error, setError] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [hasMore, setHasMore] = useState(false)
-  const [items, setItems] = useState([])
+  const [statuses, setStatuses] = useState([])
 
-  const { params } = props
   const { masto, user } = useContext(MastodonInstance)
-  const { type } = params
 
+  // Determine which timeline to use
   const timeline = useMemo(() => {
-    console.log('getting timeline', params)
     let timeline = null
 
     if (type === 'home') {
@@ -63,6 +61,7 @@ const VirtualizedTimeline = props => {
     return timeline
   }, [masto, type, params])
 
+  // Row height cache
   const cache = useMemo(
     () =>
       new CellMeasurerCache({
@@ -72,14 +71,25 @@ const VirtualizedTimeline = props => {
     []
   )
 
+  // Reload when configuration changes
   useEffect(() => {
     cache.clearAll()
     if (masto) load(true)
   }, [masto, type, params])
 
+  // Scroll to top event listener
+  useEffect(() => {
+    function scrollTop () {
+      listRef.current.base.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    document.addEventListener('scrollTop', scrollTop, false)
+    return () => document.removeEventListener('scrollTop', scrollTop)
+  })
+
   const load = async clear => {
     if (clear) {
-      setItems([])
+      setStatuses([])
     }
     setError(null)
     setHasMore(false)
@@ -87,32 +97,22 @@ const VirtualizedTimeline = props => {
 
     try {
       if (timeline) {
+        // Load new statuses
         const { value, done } = await timeline.next()
 
-        let header = null
-
-        /*if (type === 'user') {
-          header = {
-            render: () => <UserHeader userId={params.userId || user.id} />
-          }
-        }*/
-
+        let tempStatuses = []
         if (value) {
-          let tempItems = []
-
-          const newItems = Object.values(value)
+          const newStatuses = Object.values(value)
 
           if (clear) {
-            tempItems = newItems
+            // Clear old statuses, keeping only new ones
+            tempStatuses = newStatuses
           } else {
-            tempItems = [...items, ...newItems]
+            // Append new statuses to old ones
+            tempStatuses = [...statuses, ...newStatuses]
           }
 
-          setItems(tempItems)
-        }
-
-        if (header) {
-          tempItems.unshift(header)
+          setStatuses(tempStatuses)
         }
 
         setHasMore(!done)
@@ -120,7 +120,6 @@ const VirtualizedTimeline = props => {
         throw new Error('Invalid timeline')
       }
     } catch (e) {
-      console.error(e)
       toaster.show({ message: e.message, intent: Intent.DANGER })
       setError(e)
     } finally {
@@ -130,29 +129,44 @@ const VirtualizedTimeline = props => {
 
   let header = null
   if (type === 'user') {
-    header = <UserHeader userId={params.userId} />
+    header = (
+      <UserHeader
+        userId={params.userId}
+        measure={() => {
+          // Remeasure from header on
+          cache.clear(0)
+          listRef.current?.recomputeRowHeights()
+        }}
+      />
+    )
   } else if (type === 'self') {
     header = <UserHeader userId={user.id} self />
   } else if (type === 'hashtag') {
-    header = <div>{params.name}</div>
+    header = <HashtagHeader name={params.name} />
   }
 
   // TODO accessibility https://github.com/bvaughn/react-virtualized/blob/master/docs/ArrowKeyStepper.md
   return (
-    <>
-      {/* {type === 'user' && <>USER HEADER HERE</>} */}
+    <AutoSizer style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
+      {({ width, height }) => {
+        useEffect(() => {
+          cache.clearAll()
+          listRef.current?.recomputeRowHeights()
+        }, [width])
 
-      <AutoSizer style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
-        {({ width, height }) => (
+        return (
           <InfiniteLoader
-            isRowLoaded={({ index }) => !!items[index]}
+            isRowLoaded={({ index }) => !!statuses[index]}
             loadMoreRows={() => load()}
-            rowCount={hasMore ? Number.MAX_VALUE : items.length}
+            rowCount={hasMore ? Number.MAX_VALUE : statuses.length}
           >
             {({ onRowsRendered, registerChild }) => (
               <List
                 onRowsRendered={onRowsRendered}
-                ref={registerChild}
+                ref={ref => {
+                  listRef.current = ref
+                  registerChild(ref)
+                }}
                 width={width}
                 height={height}
                 rowHeight={cache.rowHeight}
@@ -184,18 +198,7 @@ const VirtualizedTimeline = props => {
                   )
                 }
                 rowRenderer={({ index, key, style, parent }) => {
-                  const originalItem = items[index]
-                  let rebloggedItem = originalItem
-
-                  // Get deepest reblog
-                  // TODO do we need to go down the tree?
-                  let isReblog = false
-                  while (rebloggedItem.reblog) {
-                    rebloggedItem = rebloggedItem.reblog
-                    isReblog = true
-                  }
-
-                  const displayItem = isReblog ? rebloggedItem : originalItem
+                  const status = statuses[index]
 
                   return (
                     <CellMeasurer
@@ -206,39 +209,24 @@ const VirtualizedTimeline = props => {
                       rowIndex={index}
                     >
                       <div style={style}>
-                        <ItemContainer>
+                        <StatusWrapper>
                           {index === 0 && (
                             <HeaderWrapper>{header}</HeaderWrapper>
                           )}
-                          <Status
-                            account={displayItem.account}
-                            secondaryAccount={isReblog && originalItem.account}
-                          >
-                            <MediaRenderer
-                              media={displayItem.mediaAttachments}
-                            />
 
-                            {displayItem.content && (
-                              <CaptionWrapper>
-                                <HtmlRenderer
-                                  content={displayItem.content}
-                                  context={displayItem}
-                                />
-                              </CaptionWrapper>
-                            )}
-                          </Status>
-                        </ItemContainer>
+                          <Status status={status} />
+                        </StatusWrapper>
                       </div>
                     </CellMeasurer>
                   )
                 }}
-                rowCount={items.length}
+                rowCount={statuses.length}
               />
             )}
           </InfiniteLoader>
-        )}
-      </AutoSizer>
-    </>
+        )
+      }}
+    </AutoSizer>
   )
 }
 

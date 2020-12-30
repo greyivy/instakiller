@@ -7,7 +7,6 @@ import styled from 'styled-components'
 
 const Header = styled.header`
   width: 100%;
-  height: 250px;
   padding: 1rem;
   display: flex;
   align-items: flex-start;
@@ -62,6 +61,11 @@ const UserHeader = props => {
   }, [props.userId])
 
   const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    // When user is changed, remeasure header (allowing for dynamic height)
+    props.measure()
+  }, [user])
 
   const load = async userId => {
     const account = await masto.fetchAccount(userId)

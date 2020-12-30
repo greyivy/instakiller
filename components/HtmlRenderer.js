@@ -1,5 +1,6 @@
 import { Hashtag, Mention } from './Mention'
 
+import { Classes } from '@blueprintjs/core'
 import { createElement } from 'preact'
 import parse from 'html-dom-parser'
 

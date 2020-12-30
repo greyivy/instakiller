@@ -16,7 +16,8 @@ const Mention = props => (
   <MentionInner
     push
     href={`/user/${props.account.id}`}
-    title={`${props.account.username} account`}
+    title={`${props.account.username}'s account`}
+    style={props.style}
   >
     {props.children ? props.children : `@${props.account.username}`}
   </MentionInner>
@@ -27,6 +28,7 @@ const Hashtag = props => (
     push
     href={`/hashtag/${props.name}`}
     title={`${props.name} hashtag`}
+    style={props.style}
   >
     {props.children ? props.children : `#${props.name}`}
   </MentionInner>

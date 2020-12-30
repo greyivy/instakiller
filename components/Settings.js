@@ -41,6 +41,9 @@ const Settings = props => {
   const [enableBackgroundBlur, setEnableBackgroundBlur] = usePreference(
     'enableBackgroundBlur'
   )
+  const [enableTextRenderer, setEnableTextRenderer] = usePreference(
+    'enableTextRenderer'
+  )
   const [profileTheme, setProfileTheme] = usePreference('profileTheme')
 
   return (
@@ -146,6 +149,11 @@ const Settings = props => {
           label='Enable background blur'
           checked={enableBackgroundBlur}
           onChange={() => setEnableBackgroundBlur(!enableBackgroundBlur)}
+        />
+        <Switch
+          label='Enable text renderer'
+          checked={enableTextRenderer}
+          onChange={() => setEnableTextRenderer(!enableTextRenderer)}
         />
       </Card>
 

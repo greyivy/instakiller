@@ -11,7 +11,10 @@
     "masto": "^3.6.4",
     "path-to-regexp": "^6.2.0",
     "preact": "^10.5.7",
+    "random-gradient": "0.0.2",
     "react-flickity-component": "^3.6.0",
+    "react-textfit": "^1.1.1",
+    "react-time-ago": "^6.2.2",
     "react-virtualized": "^9.22.3",
     "snowpack": "^2.18.5",
     "styled-components": "^5.2.1"
