@@ -158,8 +158,6 @@ const VirtualizedTimeline = props => {
   }
 
   const mutateStatus = mutatedStatus => {
-    console.log(mutatedStatus)
-
     const mutatedStatuses = [...statuses]
 
     const index = mutatedStatuses.findIndex(
@@ -170,26 +168,21 @@ const VirtualizedTimeline = props => {
     )
     if (index !== -1) {
       // Mutate status
-      mutatedStatuses[index] = mutatedStatus
+      // Note: we specifically need to use Object.assign here
+      // to keep the reference to the old status so the List
+      // knows to rerender. mutatedStatuses[index] = mutatedStatus
+      // DOES NOT WORK
+      Object.assign(mutatedStatuses[index], mutatedStatus)
       cache.clear(index)
     }
     if (rebloggedIndex !== -1) {
       // Mutate reblog
-      mutatedStatuses[rebloggedIndex].reblog = mutatedStatus
+      Object.assign(mutatedStatuses[rebloggedIndex].reblog, mutatedStatus)
       cache.clear(rebloggedIndex)
     }
 
     setStatuses(mutatedStatuses)
   }
-
-  useEffect(() => {
-    if (listRef.current) {
-      // HACK isScrollingOptOut prevents rows from rerendering
-      // automatically when props are changed
-      listRef.current.forceUpdate()
-      listRef.current.forceUpdateGrid()
-    }
-  }, [statuses])
 
   let header = null
   if (type === 'user') {

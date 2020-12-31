@@ -20,7 +20,6 @@ const MediaImageBackgroundBlur = styled.div`
   left: -16px;
   width: calc(100% + 32px);
   height: calc(100% + 32px);
-  background: url(${props => props.src});
   background-size: cover;
   background-position: center;
   filter: blur(16px);
@@ -28,7 +27,6 @@ const MediaImageBackgroundBlur = styled.div`
 
 // TODO ensure alt/title works
 const MediaImage = styled.div`
-  background: url(${props => props.src});
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -60,10 +58,15 @@ export const StatusImage = props => {
   return (
     <div>
       {enableBackgroundBlur && (
-        <MediaImageBackgroundBlur src={props.media.url} />
+        <MediaImageBackgroundBlur
+          style={{ backgroundImage: `url(${props.media.url})` }}
+        />
       )}
       <MediaImageWrapper>
-        <MediaImage src={props.media.url} title={props.media.description} />
+        <MediaImage
+          style={{ backgroundImage: `url(${props.media.url})` }}
+          title={props.media.description}
+        />
       </MediaImageWrapper>
     </div>
   )
