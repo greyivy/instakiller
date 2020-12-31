@@ -24,7 +24,7 @@ const Wrapper = styled.div`
   padding-top: 50px;
 
   main {
-    height: calc(100vh - 50px);
+    height: calc(100vh - ${props => (props.isSubPage ? 50 : 100)}px);
   }
   .bp3-panel-stack {
     height: 100%;
@@ -137,7 +137,10 @@ function App (props) {
   }, [panels])
 
   useEffect(() => {
-    if (!currentAccount && accounts.length > 0) {
+    if (
+      (!currentAccount && accounts.length > 0) ||
+      !accounts.find(account => account.id === currentAccount.id)
+    ) {
       // If no account is selected and there is an account available, select it
       setCurrentAccount(accounts[0])
     } else if (accounts.length === 0) {
@@ -168,12 +171,15 @@ function App (props) {
   const hasAccount = !!currentAccount
 
   return (
-    <Wrapper>
+    <Wrapper isSubPage={isSubPage}>
       <Navbar
         fixedToTop
         onClick={e => {
-          const event = new window.Event('scrollTop')
-          document.dispatchEvent(event)
+          e.stopPropagation()
+          if (e.target.classList.contains(Classes.NAVBAR)) {
+            const event = new window.Event('scrollTop')
+            document.dispatchEvent(event)
+          }
         }}
       >
         <Navbar.Group align={Alignment.LEFT}>

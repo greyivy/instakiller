@@ -12,6 +12,7 @@ render(
   <PreferencesWrapper
     default={{
       accounts: [],
+      onlyMedia: false,
       enableBackgroundBlur: true,
       enableTextRenderer: true,
       profileTheme: 'twitter'

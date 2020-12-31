@@ -28,8 +28,8 @@ const Container = styled.div`
 
 function uuidv4 () {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    var r = (Math.random() * 16) | 0,
-      v = c == 'x' ? r : (r & 0x3) | 0x8
+    var r = (Math.random() * 16) | 0
+    var v = c == 'x' ? r : (r & 0x3) | 0x8
     return v.toString(16)
   })
 }
@@ -38,6 +38,7 @@ const Settings = props => {
   const { preferences } = useContext(Preferences)
   const [accounts, setAccounts] = usePreference('accounts')
   const [tempAccount, setTempAccount] = useState({})
+  const [onlyMedia, setOnlyMedia] = usePreference('onlyMedia')
   const [enableBackgroundBlur, setEnableBackgroundBlur] = usePreference(
     'enableBackgroundBlur'
   )
@@ -78,7 +79,7 @@ const Settings = props => {
 
         <H5>Add account</H5>
         <FormGroup
-          helperText='e.g. mastodon.online (no https://)'
+          helperText='e.g. https://mastodon.online'
           label='Instance URI'
           labelFor='uri'
           labelInfo='(required)'
@@ -108,7 +109,7 @@ const Settings = props => {
             />
             <AnchorButton
               disabled={!tempAccount.uri}
-              href={`https://${tempAccount.uri}/settings/applications/new`}
+              href={`${tempAccount.uri}/settings/applications/new`}
               target='_blank'
               rel='noopener'
             >
@@ -145,6 +146,11 @@ const Settings = props => {
           <Radio label='Instagram' value='instagram' />
         </RadioGroup>
 
+        <Switch
+          label='Only show posts with media'
+          checked={onlyMedia}
+          onChange={() => setOnlyMedia(!onlyMedia)}
+        />
         <Switch
           label='Enable background blur'
           checked={enableBackgroundBlur}

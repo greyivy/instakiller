@@ -8,6 +8,7 @@
     "flickity": "^2.2.1",
     "history": "^5.0.0",
     "html-dom-parser": "^1.0.0",
+    "lru-cache": "^6.0.0",
     "masto": "^3.6.4",
     "path-to-regexp": "^6.2.0",
     "preact": "^10.5.7",

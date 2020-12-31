@@ -1,54 +1,96 @@
 import HtmlRenderer from '../HtmlRenderer'
+import LRU from 'lru-cache'
 import { Textfit } from 'react-textfit'
-import gradient from 'random-gradient'
+import { default as randomGradient } from 'random-gradient'
 import styled from 'styled-components'
 import { useState } from 'preact/hooks'
 
 const MIN_SIZE = 18
 const MAX_SIZE = 56
 
-const TextFitWrapper = styled(Textfit)`
+const cache = new LRU({
+  max: 512
+})
+
+const CLASS_TEXT_RENDERER_INNER = 'text-renderer'
+
+const TextRendererWrapper = styled.div`
   padding: 4rem;
-  display: flex;
-  align-items: center;
-  color: #fff;
-  text-shadow: 0px 0px 4px #000;
+  display: relative;
 
-  > div {
-    max-height: 100%;
-    mask-image: ${props =>
-      props.overflow // If the text is overflowing, fade it out
-        ? `linear-gradient(to bottom, rgba(0, 0, 0, 1) 84%, rgba(0, 0, 0, 0));`
-        : 'none'};
-  }
+  .${CLASS_TEXT_RENDERER_INNER} {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    color: #fff;
+    text-shadow: 0px 0px 4px #000;
 
-  * {
-    color: inherit !important;
+    > div {
+      max-height: 100%;
+      mask-image: ${props =>
+        props.overflow // If the text is overflowing, fade it out
+          ? `linear-gradient(to bottom, rgba(0, 0, 0, 1) 84%, rgba(0, 0, 0, 0));`
+          : 'none'};
+    }
+
+    * {
+      color: inherit !important;
+    }
   }
 `
+
 const TextRenderer = props => {
   const { status } = props
 
-  const [overflow, setOverflow] = useState(false)
+  const cached = cache.get(status.id)
+
+  const [overflow, setOverflow] = useState(cached ? cached.overflow : false)
+
+  let gradient = null
+
+  let textRendererInner = null
+
+  if (cached) {
+    gradient = cached.gradient
+
+    textRendererInner = (
+      <div
+        className={CLASS_TEXT_RENDERER_INNER}
+        style={{ fontSize: `${cached.size}px` }}
+      >
+        <HtmlRenderer content={status.content} context={status} />
+      </div>
+    )
+  } else {
+    gradient = randomGradient(status.id)
+
+    textRendererInner = (
+      <Textfit
+        className={CLASS_TEXT_RENDERER_INNER}
+        mode='multi'
+        min={MIN_SIZE}
+        max={MAX_SIZE}
+        onReady={size => {
+          // Determine if the text is overflowing
+          // This occurs when the minimum font-size is reached
+          let overflow = size <= MIN_SIZE
+          setOverflow(overflow)
+
+          // Calculating all of this is expensive so cache it for later
+          cache.set(status.id, { size, overflow, gradient })
+        }}
+        overflow={overflow}
+      >
+        <HtmlRenderer content={status.content} context={status} />
+      </Textfit>
+    )
+  }
 
   return (
-    <TextFitWrapper
-      mode='multi'
-      min={MIN_SIZE}
-      max={MAX_SIZE}
-      style={{ background: gradient(status.id) }}
-      onReady={size => {
-        // Determine if the text is overflowing
-        if (size <= MIN_SIZE) {
-          setOverflow(true)
-        } else {
-          setOverflow(false)
-        }
-      }}
-      overflow={overflow}
-    >
-      <HtmlRenderer content={status.content} context={status} />
-    </TextFitWrapper>
+    <TextRendererWrapper style={{ background: gradient }} overflow={overflow}>
+      {textRendererInner}
+    </TextRendererWrapper>
   )
 }
 export default TextRenderer

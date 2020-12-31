@@ -15,6 +15,7 @@ import Status from './Status'
 import UserHeader from './UserHeader'
 import styled from 'styled-components'
 import toaster from './toaster'
+import { usePreference } from '../prefs'
 
 const StatusWrapper = styled.div`
   max-width: var(--containerWidth);
@@ -32,30 +33,46 @@ const VirtualizedTimeline = props => {
   const listRef = useRef()
 
   const [error, setError] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isInitialTimelineLoading, setIsInitialTimelineLoading] = useState(true)
+  const [isAccountLoading, setIsAccountLoading] = useState(false)
   const [hasMore, setHasMore] = useState(false)
   const [statuses, setStatuses] = useState([])
+  const [timelineAccount, setTimelineAccount] = useState(null)
 
   const { masto, user } = useContext(MastodonInstance)
+
+  const [onlyMedia] = usePreference('onlyMedia')
 
   // Determine which timeline to use
   const timeline = useMemo(() => {
     let timeline = null
 
     if (type === 'home') {
-      timeline = masto.fetchHomeTimeline()
+      timeline = masto.fetchHomeTimeline({
+        onlyMedia
+      })
     } else if (type === 'local') {
       timeline = masto.fetchPublicTimeline({
-        local: true
+        local: true,
+        onlyMedia
       })
     } else if (type === 'federated') {
-      timeline = masto.fetchPublicTimeline()
+      timeline = masto.fetchPublicTimeline({
+        onlyMedia
+      })
     } else if (type === 'user') {
-      timeline = masto.fetchAccountStatuses(params.userId)
+      // TODO excludeReplies, pinned (can use URL params)
+      timeline = masto.fetchAccountStatuses(params.userId, {
+        onlyMedia
+      })
     } else if (type === 'self') {
-      timeline = masto.fetchAccountStatuses(user.id)
+      timeline = masto.fetchAccountStatuses(user.id, {
+        onlyMedia
+      })
     } else if (type === 'hashtag') {
-      timeline = masto.fetchTagTimeline(params.name)
+      timeline = masto.fetchTagTimeline(params.name, {
+        onlyMedia
+      })
     }
 
     return timeline
@@ -87,15 +104,27 @@ const VirtualizedTimeline = props => {
     return () => document.removeEventListener('scrollTop', scrollTop)
   })
 
-  const load = async clear => {
-    if (clear) {
-      setStatuses([])
-    }
-    setError(null)
-    setHasMore(false)
-    setIsLoading(true)
-
+  const load = async isInitial => {
     try {
+      setError(null)
+      setHasMore(false)
+
+      if (isInitial) {
+        setIsInitialTimelineLoading(true)
+        setStatuses([])
+        setTimelineAccount(null)
+
+        if (type === 'user') {
+          setIsAccountLoading(true)
+          setTimelineAccount(await masto.fetchAccount(params.userId))
+          setIsAccountLoading(false)
+        } else if (type === 'self') {
+          setIsAccountLoading(true)
+          setTimelineAccount(await masto.fetchAccount(user.id))
+          setIsAccountLoading(false)
+        }
+      }
+
       if (timeline) {
         // Load new statuses
         const { value, done } = await timeline.next()
@@ -104,7 +133,7 @@ const VirtualizedTimeline = props => {
         if (value) {
           const newStatuses = Object.values(value)
 
-          if (clear) {
+          if (isInitial) {
             // Clear old statuses, keeping only new ones
             tempStatuses = newStatuses
           } else {
@@ -123,24 +152,47 @@ const VirtualizedTimeline = props => {
       toaster.show({ message: e.message, intent: Intent.DANGER })
       setError(e)
     } finally {
-      setIsLoading(false)
+      setIsInitialTimelineLoading(false)
     }
   }
 
-  const measureHeader = () => {
-    // Remeasure from header on
-    cache.clear(0)
-    listRef.current?.recomputeRowHeights()
+  const mutateStatus = mutatedStatus => {
+    console.log(mutatedStatus)
+
+    const mutatedStatuses = [...statuses]
+
+    const index = mutatedStatuses.findIndex(
+      status => status.id === mutatedStatus.id
+    )
+    const rebloggedIndex = mutatedStatuses.findIndex(
+      status => status.reblog && status.reblog.id === mutatedStatus.id
+    )
+    if (index !== -1) {
+      // Mutate status
+      mutatedStatuses[index] = mutatedStatus
+    }
+    if (rebloggedIndex !== -1) {
+      // Mutate reblog
+      mutatedStatuses[rebloggedIndex].reblog = mutatedStatus
+    }
+
+    console.log(index, rebloggedIndex)
+
+    setStatuses(mutatedStatuses)
   }
 
   let header = null
   if (type === 'user') {
-    header = <UserHeader userId={params.userId} measure={measureHeader} />
+    header = <UserHeader account={timelineAccount} />
   } else if (type === 'self') {
-    header = <UserHeader userId={user.id} self measure={measureHeader} />
+    header = <UserHeader account={timelineAccount} />
   } else if (type === 'hashtag') {
-    header = <HashtagHeader name={params.name} measure={measureHeader} />
+    header = <HashtagHeader name={params.name} />
   }
+
+  const isLoading = isInitialTimelineLoading || isAccountLoading
+
+  if (isLoading) return <CenteredSpinner />
 
   // TODO accessibility https://github.com/bvaughn/react-virtualized/blob/master/docs/ArrowKeyStepper.md
   return (
@@ -167,10 +219,9 @@ const VirtualizedTimeline = props => {
                 width={width}
                 height={height}
                 rowHeight={cache.rowHeight}
+                overscanRowCount={10}
                 noRowsRenderer={() =>
-                  isLoading ? (
-                    <CenteredSpinner />
-                  ) : error ? (
+                  error ? (
                     <>
                       {header}
                       <NonIdealState
@@ -200,10 +251,10 @@ const VirtualizedTimeline = props => {
                   return (
                     <CellMeasurer
                       key={key}
-                      cache={cache}
-                      parent={parent}
-                      columnIndex={0}
                       rowIndex={index}
+                      parent={parent}
+                      cache={cache}
+                      columnIndex={0}
                     >
                       <div style={style}>
                         <StatusWrapper>
@@ -211,7 +262,12 @@ const VirtualizedTimeline = props => {
                             <HeaderWrapper>{header}</HeaderWrapper>
                           )}
 
-                          <Status status={status} />
+                          <Status
+                            status={status}
+                            mutateStatus={mutatedStatus =>
+                              mutateStatus(mutatedStatus)
+                            }
+                          />
                         </StatusWrapper>
                       </div>
                     </CellMeasurer>

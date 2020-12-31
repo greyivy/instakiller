@@ -17,9 +17,11 @@ body {
   overflow: hidden;
 }
 
-.ReactVirtualized__List {
+.ReactVirtualized__List,
+.bp3-panel-stack-view {
   scrollbar-width: none;
 }
-.ReactVirtualized__List::-webkit-scrollbar {
+.ReactVirtualized__List::-webkit-scrollbar,
+.bp3-panel-stack-view::-webkit-scrollbar {
   display: none;
 }

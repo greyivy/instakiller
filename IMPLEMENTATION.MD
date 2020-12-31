@@ -1,0 +1,123 @@
+A list of implemented methods from masto.js.
+
+- [ ] streamUser
+- [ ] streamPublicTimeline
+- [ ] streamCommunityTimeline
+- [ ] streamRemotePublicTimeline
+- [ ] streamTagTimeline
+- [ ] streamLocalTagTimeline
+- [ ] streamListTimeline
+- [ ] streamDirectTimeline
+- [ ] fetchAccessToken
+- [ ] revokeAccessToken
+- [x] fetchAccount
+- [ ] fetchAccountIdentityProofs
+- [ ] createAccount
+- [ ] verifyCredentials
+- [ ] updateCredentials
+- [ ] fetchAccountFollowers
+- [ ] fetchAccountFollowing
+- [x] fetchAccountStatuses
+- [ ] followAccount
+- [ ] unfollowAccount
+- [ ] fetchAccountRelationships
+- [ ] searchAccounts
+- [ ] createApp
+- [ ] verifyAppCredentials
+- [ ] fetchBlocks
+- [ ] blockAccount
+- [ ] unblockAccount
+- [ ] fetchCustomEmojis
+- [ ] fetchDomainBlocks
+- [ ] blockDomain
+- [ ] unblockDomain
+- [ ] fetchEndorsements
+- [ ] pinAccount
+- [ ] unpinAccount
+- [ ] fetchFavourites
+- [x] favouriteStatus
+- [x] unfavouriteStatus
+- [ ] fetchFilters
+- [ ] fetchFilter
+- [ ] createFilter
+- [ ] updateFilter
+- [ ] removeFilter
+- [ ] fetchFollowRequests
+- [ ] authorizeFollowRequest
+- [ ] rejectFollowRequest
+- [ ] fetchSuggestions
+- [ ] removeSuggestion
+- [ ] fetchInstance
+- [ ] fetchInstancesPeers
+- [ ] fetchInstanceActivity
+- [ ] fetchLists
+- [ ] fetchAccountLists
+- [ ] fetchList
+- [ ] createList
+- [ ] updateList
+- [ ] removeList
+- [ ] fetchListAccounts
+- [ ] addAccountToList
+- [ ] removeAccountFromList
+- [ ] createMediaAttachment
+- [ ] fetchMediaAttachment
+- [ ] updateMediaAttachment
+- [ ] fetchMutes
+- [ ] muteAccount
+- [ ] unmuteAccount
+- [ ] muteStatus
+- [ ] unmuteStatus
+- [ ] fetchNotifications
+- [ ] fetchNotification
+- [ ] clearNotifications
+- [ ] dismissNotification
+- [ ] createPushSubscription
+- [ ] fetchPushSubscription
+- [ ] updatePushSubscription
+- [ ] removePushSubscription
+- [ ] fetchPoll
+- [ ] votePoll
+- [ ] reportAccount
+- [ ] fetchScheduledStatuses
+- [ ] fetchScheduledStatus
+- [ ] updateScheduledStatus
+- [ ] removeScheduledStatus
+- [ ] search
+- [ ] fetchStatus
+- [ ] fetchStatusContext
+- [ ] fetchStatusCard
+- [ ] fetchStatusRebloggedBy
+- [ ] fetchStatusFavouritedBy
+- [ ] createStatus
+- [ ] removeStatus
+- [x] reblogStatus
+- [x] unreblogStatus
+- [ ] pinStatus
+- [ ] unpinStatus
+- [ ] fetchBookmarks
+- [x] bookmarkStatus
+- [x] unbookmarkStatus
+- [x] fetchHomeTimeline
+- [x] fetchPublicTimeline
+- [x] fetchTagTimeline
+- [ ] fetchListTimeline
+- [ ] fetchDirectTimeline
+- [ ] fetchConversations
+- [ ] removeConversation
+- [ ] readConversation
+- [ ] followAccountByUsername
+- [ ] fetchPreferences
+- [ ] fetchTrends
+- [ ] fetchMarkers
+- [ ] createMarkers
+- [ ] fetchFeaturedTags
+- [ ] createFeaturedTag
+- [ ] fetchSuggestedFeaturedTags
+- [ ] removeFeaturedTag
+- [ ] fetchDirectory
+- [ ] fetchAnnouncements
+- [ ] dismissAnnouncement
+- [ ] addReactionToAnnouncement
+- [ ] removeReactionFromAnnouncement
+- [ ] createAccountNote
+- [ ] waitForMediaAttachment

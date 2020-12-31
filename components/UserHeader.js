@@ -54,25 +54,7 @@ const UserCounts = styled.div`
 `
 
 const UserHeader = props => {
-  const { masto } = useContext(MastodonInstance)
-
-  useEffect(() => {
-    load(props.userId)
-  }, [props.userId])
-
-  const [user, setUser] = useState(null)
-
-  useEffect(() => {
-    // When user is changed, remeasure header (allowing for dynamic height)
-    props.measure()
-  }, [user])
-
-  const load = async userId => {
-    const account = await masto.fetchAccount(userId)
-    setUser(account)
-  }
-
-  if (!user) return <div style='height:250px'></div>
+  if (!props.account) return <div style='height:250px' />
 
   const {
     avatar,
@@ -85,14 +67,14 @@ const UserHeader = props => {
     note,
     bot,
     url
-  } = user
+  } = props.account
 
-  //if props.self show settings button
+  // if props.self show settings button
 
   return (
     <div>
       <Header>
-        <Avatar size={125} account={user}></Avatar>
+        <Avatar size={125} account={props.account} />
         <UserData>
           <Username>{'@' + username}</Username>
           <UserCounts>

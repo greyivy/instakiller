@@ -42,11 +42,19 @@ const Status = props => {
 
   const displayStatus = isReblog ? rebloggedStatus : originalStatus
 
-  const [favourited, setFavourited] = useState(displayStatus.favourited)
+  const {
+    account,
+    createdAt,
+    content,
+    favourited,
+    favouritesCount,
+    reblogged,
+    reblogsCount,
+    bookmarked
+  } = displayStatus
+
   const [favouriteLoading, setFavouriteLoading] = useState(false)
-  const [reblogged, setReblogged] = useState(displayStatus.reblogged)
   const [reblogLoading, setReblogLoading] = useState(false)
-  const [bookmarked, setBookmarked] = useState(displayStatus.bookmarked)
   const [bookmarkLoading, setBookmarkLoading] = useState(false)
 
   const toggleFavourite = useCallback(async () => {
@@ -54,12 +62,22 @@ const Status = props => {
 
     try {
       if (favourited) {
-        await masto.unfavouriteStatus(displayStatus.id)
-      } else {
-        await masto.favouriteStatus(displayStatus.id)
-      }
+        // When favouriteStatus/unfavouriteStatus is called, the function returns an updated
+        // status object. We pass this to the parent component and update the state there.
+        const mutatedStatus = await masto.unfavouriteStatus(displayStatus.id)
 
-      setFavourited(!favourited)
+        // Ensure these values are actually updated... Mastodon doesn't always do so
+        mutatedStatus.favourited = false
+        mutatedStatus.favouritesCount = favouritesCount - 1
+        props.mutateStatus(mutatedStatus)
+      } else {
+        const mutatedStatus = await masto.favouriteStatus(displayStatus.id)
+
+        mutatedStatus.favourited = true
+        mutatedStatus.favouritesCount = favouritesCount + 1
+
+        props.mutateStatus(mutatedStatus)
+      }
     } catch (e) {
       toaster.show({ message: e.message, intent: Intent.DANGER })
     } finally {
@@ -72,12 +90,20 @@ const Status = props => {
 
     try {
       if (reblogged) {
-        await masto.reblogStatus(displayStatus.id)
-      } else {
-        await masto.unreblogStatus(displayStatus.id)
-      }
+        const mutatedStatus = await masto.unreblogStatus(displayStatus.id)
 
-      setReblogged(!reblogged)
+        mutatedStatus.reblogged = false
+        mutatedStatus.reblogsCount = reblogsCount - 1
+
+        props.mutateStatus(mutatedStatus)
+      } else {
+        const mutatedStatus = (await masto.reblogStatus(displayStatus.id)).reblog
+
+        mutatedStatus.reblogged = true
+        mutatedStatus.reblogsCount = reblogsCount + 1
+
+        props.mutateStatus(mutatedStatus)
+      }
     } catch (e) {
       toaster.show({ message: e.message, intent: Intent.DANGER })
     } finally {
@@ -90,12 +116,18 @@ const Status = props => {
 
     try {
       if (bookmarked) {
-        await masto.bookmarkStatus(displayStatus.id)
-      } else {
-        await masto.unbookmarkStatus(displayStatus.id)
-      }
+        const mutatedStatus = await masto.unbookmarkStatus(displayStatus.id)
 
-      setBookmarked(!bookmarked)
+        mutatedStatus.bookmarked = false
+
+        props.mutateStatus(mutatedStatus)
+      } else {
+        const mutatedStatus = await masto.bookmarkStatus(displayStatus.id)
+
+        mutatedStatus.bookmarked = true
+
+        props.mutateStatus(mutatedStatus)
+      }
     } catch (e) {
       toaster.show({ message: e.message, intent: Intent.DANGER })
     } finally {
@@ -120,9 +152,7 @@ const Status = props => {
             onClick={() => toggleFavourite()}
             loading={favouriteLoading}
           >
-            {favourited
-              ? displayStatus.favouritesCount + 1
-              : displayStatus.favouritesCount}
+            {favouritesCount}
           </Button>
           <Button
             minimal
@@ -132,9 +162,7 @@ const Status = props => {
             onClick={() => toggleReblog()}
             loading={reblogLoading}
           >
-            {reblogged
-              ? displayStatus.reblogsCount + 1
-              : displayStatus.reblogsCount}
+            {reblogsCount}
           </Button>
 
           <div style={{ float: 'right' }} title='Bookmark'>
@@ -150,21 +178,16 @@ const Status = props => {
         </CaptionButtons>
 
         <CaptionHeader>
-          <Mention account={displayStatus.account} />{' '}
+          <Mention account={account} />{' '}
           <ReactTimeAgo
             className={Classes.TEXT_MUTED}
-            date={Date.parse(displayStatus.createdAt)}
+            date={Date.parse(createdAt)}
             locale='en-US'
             //timeStyle='twitter' // For comments
           />
         </CaptionHeader>
 
-        {displayStatus.content && (
-          <HtmlRenderer
-            content={displayStatus.content}
-            context={displayStatus}
-          />
-        )}
+        {content && <HtmlRenderer content={content} context={displayStatus} />}
       </CaptionWrapper>
     </StatusContainer>
   )
