@@ -1,7 +1,7 @@
 import '/node_modules/flickity/dist/flickity.css'
 import '../../assets/flickity-reset.css'
 
-import { StatusAudio, StatusGif, StatusImage, StatusVideo } from './renderers'
+import { StatusAudio, StatusImage, StatusVideo } from './renderers'
 import { useEffect, useRef, useState } from 'preact/hooks'
 
 import Flickity from 'react-flickity-component'
@@ -52,9 +52,9 @@ const FlickityCounter = styled.span`
 const attTypeMap = {
   image: StatusImage,
   video: StatusVideo,
-  gifv: StatusGif,
+  gifv: StatusVideo,
   audio: StatusAudio,
-  unknown: null
+  unknown: null // TODO use a vertically centered question mark icon!
 }
 
 const renderMedia = media => {

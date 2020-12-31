@@ -77,15 +77,18 @@ const Settings = props => {
           </Callout>
         ))}
 
+        {/* Note: URL is shown here the the field is actually URI */}
         <H5>Add account</H5>
         <FormGroup
           helperText='e.g. https://mastodon.online'
-          label='Instance URI'
-          labelFor='uri'
+          label='Instance URL'
+          labelFor='url'
           labelInfo='(required)'
         >
           <InputGroup
-            id='uri'
+            id='url'
+            type='url'
+            placeholder='https://'
             value={tempAccount.uri}
             onChange={e =>
               setTempAccount({ ...tempAccount, uri: e.target.value })

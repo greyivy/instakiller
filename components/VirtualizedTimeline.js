@@ -49,6 +49,7 @@ const VirtualizedTimeline = props => {
 
     if (type === 'home') {
       timeline = masto.fetchHomeTimeline({
+        // TODO this does not work (but it does on the public timelines)
         onlyMedia
       })
     } else if (type === 'local') {
@@ -76,7 +77,7 @@ const VirtualizedTimeline = props => {
     }
 
     return timeline
-  }, [masto, type, params])
+  }, [masto, type, params, onlyMedia])
 
   // Row height cache
   const cache = useMemo(
@@ -170,16 +171,25 @@ const VirtualizedTimeline = props => {
     if (index !== -1) {
       // Mutate status
       mutatedStatuses[index] = mutatedStatus
+      cache.clear(index)
     }
     if (rebloggedIndex !== -1) {
       // Mutate reblog
       mutatedStatuses[rebloggedIndex].reblog = mutatedStatus
+      cache.clear(rebloggedIndex)
     }
-
-    console.log(index, rebloggedIndex)
 
     setStatuses(mutatedStatuses)
   }
+
+  useEffect(() => {
+    if (listRef.current) {
+      // HACK isScrollingOptOut prevents rows from rerendering
+      // automatically when props are changed
+      listRef.current.forceUpdate()
+      listRef.current.forceUpdateGrid()
+    }
+  }, [statuses])
 
   let header = null
   if (type === 'user') {
@@ -219,7 +229,8 @@ const VirtualizedTimeline = props => {
                 width={width}
                 height={height}
                 rowHeight={cache.rowHeight}
-                overscanRowCount={10}
+                overscanRowCount={3}
+                isScrollingOptOut
                 noRowsRenderer={() =>
                   error ? (
                     <>
