@@ -183,9 +183,9 @@ const VirtualizedTimeline = props => {
 
   let header = null
   if (type === 'user') {
-    header = <UserHeader account={timelineAccount} />
+    header = <UserHeader account={timelineAccount} type={'user'}/>
   } else if (type === 'self') {
-    header = <UserHeader account={timelineAccount} />
+    header = <UserHeader account={timelineAccount} type={'self'}/>
   } else if (type === 'hashtag') {
     header = <HashtagHeader name={params.name} />
   }
