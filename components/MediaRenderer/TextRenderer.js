@@ -22,7 +22,9 @@ const TextRendererWrapper = styled.div`
     height: 100%;
     width: 100%;
     display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
     color: #fff;
     text-shadow: 0px 0px 4px #000;
 
