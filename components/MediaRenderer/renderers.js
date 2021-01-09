@@ -20,7 +20,6 @@ const MediaImageBackgroundBlur = styled.div`
   left: -16px;
   width: calc(100% + 32px);
   height: calc(100% + 32px);
-  background: url(${props => props.src});
   background-size: cover;
   background-position: center;
   filter: blur(16px);
@@ -28,7 +27,6 @@ const MediaImageBackgroundBlur = styled.div`
 
 // TODO ensure alt/title works
 const MediaImage = styled.div`
-  background: url(${props => props.src});
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -38,14 +36,20 @@ const MediaImage = styled.div`
 
 const MediaVideo = styled.video`
   background: #000;
+  width: 100%;
+  height: 100%;
 `
 
-const AudioWrapper = styled.div`
+const MediaAudioWrapper = styled.div`
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+
+  audio {
+    width: 80%;
+  }
 `
 
 export const StatusImage = props => {
@@ -54,10 +58,15 @@ export const StatusImage = props => {
   return (
     <div>
       {enableBackgroundBlur && (
-        <MediaImageBackgroundBlur src={props.media.url} />
+        <MediaImageBackgroundBlur
+          style={{ backgroundImage: `url(${props.media.url})` }}
+        />
       )}
       <MediaImageWrapper>
-        <MediaImage src={props.media.url} title={props.media.description} />
+        <MediaImage
+          style={{ backgroundImage: `url(${props.media.url})` }}
+          title={props.media.description}
+        />
       </MediaImageWrapper>
     </div>
   )
@@ -69,17 +78,8 @@ export const StatusVideo = props => {
 
 export const StatusAudio = props => {
   return (
-    <AudioWrapper>
+    <MediaAudioWrapper>
       <audio src={props.media.url} controls />
-    </AudioWrapper>
-  )
-}
-
-// TODO test
-export const StatusGif = props => {
-  return (
-    <MediaImageWrapper>
-      <MediaImage src={props.media.url} title={props.media.description} />
-    </MediaImageWrapper>
+    </MediaAudioWrapper>
   )
 }

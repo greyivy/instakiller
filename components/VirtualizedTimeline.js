@@ -49,6 +49,7 @@ const VirtualizedTimeline = props => {
 
     if (type === 'home') {
       timeline = masto.fetchHomeTimeline({
+        // TODO this does not work (but it does on the public timelines)
         onlyMedia
       })
     } else if (type === 'local') {
@@ -76,7 +77,7 @@ const VirtualizedTimeline = props => {
     }
 
     return timeline
-  }, [masto, type, params])
+  }, [masto, type, params, onlyMedia])
 
   // Row height cache
   const cache = useMemo(
@@ -157,8 +158,6 @@ const VirtualizedTimeline = props => {
   }
 
   const mutateStatus = mutatedStatus => {
-    console.log(mutatedStatus)
-
     const mutatedStatuses = [...statuses]
 
     const index = mutatedStatuses.findIndex(
@@ -169,14 +168,18 @@ const VirtualizedTimeline = props => {
     )
     if (index !== -1) {
       // Mutate status
-      mutatedStatuses[index] = mutatedStatus
+      // Note: we specifically need to use Object.assign here
+      // to keep the reference to the old status so the List
+      // knows to rerender. mutatedStatuses[index] = mutatedStatus
+      // DOES NOT WORK
+      Object.assign(mutatedStatuses[index], mutatedStatus)
+      cache.clear(index)
     }
     if (rebloggedIndex !== -1) {
       // Mutate reblog
-      mutatedStatuses[rebloggedIndex].reblog = mutatedStatus
+      Object.assign(mutatedStatuses[rebloggedIndex].reblog, mutatedStatus)
+      cache.clear(rebloggedIndex)
     }
-
-    console.log(index, rebloggedIndex)
 
     setStatuses(mutatedStatuses)
   }
@@ -219,7 +222,8 @@ const VirtualizedTimeline = props => {
                 width={width}
                 height={height}
                 rowHeight={cache.rowHeight}
-                overscanRowCount={10}
+                overscanRowCount={3}
+                isScrollingOptOut
                 noRowsRenderer={() =>
                   error ? (
                     <>

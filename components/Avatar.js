@@ -31,9 +31,6 @@ const DEFAULT_SIZE = '48px'
 const Avatar = props => {
   const { account, secondaryAccount, size, style } = props
 
-  const [loaded, setLoaded] = useState(false)
-  const [secondaryLoaded, setSecondaryLoaded] = useState(false)
-
   // Determine CSS unit for the size prop
   const actualSize = size
     ? typeof size === 'number'
@@ -41,30 +38,16 @@ const Avatar = props => {
       : size
     : DEFAULT_SIZE
 
-  // Wait for avatars to load flly before displaying them
-  const img = new window.Image()
-  img.onload = () => setLoaded(true)
-  img.src = account.avatarStatic
-
-  if (secondaryAccount) {
-    const secondaryImg = new window.Image()
-    secondaryImg.onload = () => setSecondaryLoaded(true)
-    secondaryImg.src = secondaryAccount.avatarStatic
-  }
-
-  const allLoaded = loaded && (!secondaryAccount || secondaryLoaded)
-
   return (
     <AvatarPrimary
       push
       href={`/user/${account.id}`}
-      src={allLoaded ? account.avatarStatic : ''}
+      src={account.avatarStatic}
       title={`${account.username}'s avatar`}
-      className={allLoaded ? '' : Classes.SKELETON}
       size={actualSize}
       style={style}
     >
-      {secondaryAccount && allLoaded && (
+      {secondaryAccount && (
         <AvatarSecondary
           src={secondaryAccount.avatarStatic}
           title={`${secondaryAccount.username}'s avatar`}
