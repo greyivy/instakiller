@@ -34,6 +34,16 @@ function uuidv4 () {
   })
 }
 
+function validateInput(regex, currentValue, newValue) {
+  if(currentValue.includes('http://')){
+    const item = currentValue.replace(regex, newValue)
+    return item;
+  } else {
+    const item = ('https://' + currentValue)
+    return item;
+  }
+}
+
 const Settings = props => {
   const { preferences } = useContext(Preferences)
   const [accounts, setAccounts] = usePreference('accounts')
@@ -126,7 +136,7 @@ const Settings = props => {
           icon='plus'
           disabled={!(tempAccount.uri && tempAccount.accessToken)}
           onClick={() => {
-            setAccounts([...accounts, { id: uuidv4(), ...tempAccount }])
+            setAccounts([...accounts, { id: uuidv4(), uri: validateInput('/^http:\/\//i', tempAccount.uri, 'https://'), accessToken: tempAccount.accessToken }])
             setTempAccount({
               uri: '',
               accessToken: ''
