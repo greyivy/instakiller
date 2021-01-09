@@ -15,6 +15,32 @@ const cache = new LRU({
   max: 512
 })
 
+const CLASS_TEXT_RENDERER_INNER = 'text-renderer'
+
+const TextRendererWrapper = styled.div`
+  padding: 4rem;
+  display: relative;
+
+  .${CLASS_TEXT_RENDERER_INNER} {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    text-shadow: 0px 0px 4px #000;
+
+    > div {
+      max-height: 100%;
+      mask-image: ${props =>
+        props.overflow // If the text is overflowing, fade it out
+          ? `linear-gradient(to bottom, rgba(0, 0, 0, 1) 84%, rgba(0, 0, 0, 0));`
+          : 'none'};
+    }
+  }
+`
+
 window.addEventListener('resize', () => cache.reset())
 
 const textFitWrapperStyle = css`

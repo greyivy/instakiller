@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from 'preact/hooks'
 
 import Avatar from './Avatar'
 import HtmlRenderer from './HtmlRenderer'
+import RouterLink from './RouterLink'
 import { MastodonInstance } from '../mastodon'
 import styled from 'styled-components'
 
@@ -53,6 +54,24 @@ const UserCounts = styled.div`
   }
 `
 
+const AvatarWrapper = styled.div`
+  display: flex; 
+  flex-direction: column;
+  align-items: center;
+  & > .settings {
+    text-decoration: none;
+    cursor: pointer;
+    transform: translateY(-3px);
+  }
+  & > .settings {
+    margin-top:.5rem;
+    border: 1px solid gray;
+    width: max-content;
+    padding: .15rem .5rem;
+    border-radius: 5px;
+  }
+`
+
 const UserHeader = props => {
   if (!props.account) return <div style='height:250px' />
 
@@ -69,12 +88,15 @@ const UserHeader = props => {
     url
   } = props.account
 
-  // if props.self show settings button
-
   return (
     <div>
       <Header>
-        <Avatar size={125} account={props.account} />
+        <AvatarWrapper>
+          <Avatar size={125} account={props.account} />
+          {props.type === 'self'  && 
+            <RouterLink href="/settings" className="settings">Settings</RouterLink>
+          }
+        </AvatarWrapper>
         <UserData>
           <Username>{'@' + username}</Username>
           <UserCounts>
