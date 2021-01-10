@@ -1,4 +1,4 @@
-import { Button, Classes, Intent } from '@blueprintjs/core'
+import { Button, Classes, Collapse, Icon, Intent } from '@blueprintjs/core'
 import { useCallback, useContext, useState } from 'preact/hooks'
 
 import HtmlRenderer from '../HtmlRenderer'
@@ -23,6 +23,12 @@ const CaptionButtons = styled.div`
   margin-bottom: 0.5rem;
   margin-left: -8px;
   margin-right: -8px;
+`
+
+const SpoilerText = styled.a`
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
 `
 
 const Status = props => {
@@ -50,8 +56,11 @@ const Status = props => {
     favouritesCount,
     reblogged,
     reblogsCount,
-    bookmarked
+    bookmarked,
+    spoilerText
   } = displayStatus
+
+  const [expanded, setExpanded] = useState(false) // TODO pref
 
   const [favouriteLoading, setFavouriteLoading] = useState(false)
   const [reblogLoading, setReblogLoading] = useState(false)
@@ -97,7 +106,8 @@ const Status = props => {
 
         props.mutateStatus(mutatedStatus)
       } else {
-        const mutatedStatus = (await masto.reblogStatus(displayStatus.id)).reblog
+        const mutatedStatus = (await masto.reblogStatus(displayStatus.id))
+          .reblog
 
         mutatedStatus.reblogged = true
         mutatedStatus.reblogsCount = reblogsCount + 1
@@ -134,6 +144,10 @@ const Status = props => {
       setBookmarkLoading(false)
     }
   }, [bookmarked])
+
+  const renderedContent = content && (
+    <HtmlRenderer content={content} context={displayStatus} />
+  )
 
   return (
     <StatusContainer
@@ -187,7 +201,18 @@ const Status = props => {
           />
         </CaptionHeader>
 
-        {content && <HtmlRenderer content={content} context={displayStatus} />}
+        {spoilerText ? (
+          <>
+            <SpoilerText onClick={() => setExpanded(!expanded)}>
+              {spoilerText}{' '}
+              <Icon icon={expanded ? 'chevron-up' : 'chevron-down'} />
+            </SpoilerText>
+
+            {expanded && renderedContent}
+          </>
+        ) : (
+          renderedContent
+        )}
       </CaptionWrapper>
     </StatusContainer>
   )

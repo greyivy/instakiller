@@ -35,10 +35,12 @@ const PreferencesWrapper = props => {
 const usePreference = key => {
   const { preferences, setPreferences } = useContext(Preferences)
 
+  // Get preference value if exists
   const value = Object.prototype.hasOwnProperty.call(preferences, key)
     ? preferences[key]
     : null
 
+  // Memoize a setter for the preference
   const setter = useMemo(
     () => value => setPreferences({ ...preferences, [key]: value }),
     [preferences, setPreferences]

@@ -1,11 +1,4 @@
-import {
-  AutoSizer,
-  CellMeasurer,
-  CellMeasurerCache,
-  InfiniteLoader,
-  List
-} from 'react-virtualized'
-import { Button, Intent, NonIdealState } from '@blueprintjs/core'
+import { Button, Intent, NonIdealState, Spinner } from '@blueprintjs/core'
 import { MastodonInstance, MastodonInstanceWrapper } from '../mastodon'
 import { useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 
@@ -13,6 +6,7 @@ import CenteredSpinner from './CenteredSpinner'
 import HashtagHeader from './HashtagHeader'
 import Status from './Status'
 import UserHeader from './UserHeader'
+import { Virtuoso } from 'react-virtuoso'
 import styled from 'styled-components'
 import toaster from './toaster'
 import { usePreference } from '../prefs'
@@ -79,19 +73,8 @@ const VirtualizedTimeline = props => {
     return timeline
   }, [masto, type, params, onlyMedia])
 
-  // Row height cache
-  const cache = useMemo(
-    () =>
-      new CellMeasurerCache({
-        fixedWidth: true,
-        defaultHeight: 600
-      }),
-    []
-  )
-
   // Reload when configuration changes
   useEffect(() => {
-    cache.clearAll()
     if (masto) load(true)
   }, [masto, type, params])
 
@@ -173,117 +156,62 @@ const VirtualizedTimeline = props => {
       // knows to rerender. mutatedStatuses[index] = mutatedStatus
       // DOES NOT WORK
       Object.assign(mutatedStatuses[index], mutatedStatus)
-      cache.clear(index)
     }
     if (rebloggedIndex !== -1) {
       // Mutate reblog
       Object.assign(mutatedStatuses[rebloggedIndex].reblog, mutatedStatus)
-      cache.clear(rebloggedIndex)
     }
 
     setStatuses(mutatedStatuses)
-  }
-
-  let header = null
-  if (type === 'user') {
-    header = <UserHeader account={timelineAccount} type={'user'}/>
-  } else if (type === 'self') {
-    header = <UserHeader account={timelineAccount} type={'self'}/>
-  } else if (type === 'hashtag') {
-    header = <HashtagHeader name={params.name} />
   }
 
   const isLoading = isInitialTimelineLoading || isAccountLoading
 
   if (isLoading) return <CenteredSpinner />
 
-  // TODO accessibility https://github.com/bvaughn/react-virtualized/blob/master/docs/ArrowKeyStepper.md
   return (
-    <AutoSizer style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
-      {({ width, height }) => {
-        useEffect(() => {
-          cache.clearAll()
-          listRef.current?.recomputeRowHeights()
-        }, [width])
+    <Virtuoso
+      style={{ height: '100%' }}
+      totalCount={statuses.length}
+      endReached={() => load()}
+      overscan={{
+        // 800px is the average height of a post...
+        main: 800 * 4, // ...so overscan 4 posts going forward...
+        reverse: 800 * 8 // ...and 8 going backward
+      }}
+      components={{
+        Header: () => {
+          let header = null
+          if (type === 'user') {
+            header = <UserHeader account={timelineAccount} type={'user'} />
+          } else if (type === 'self') {
+            header = <UserHeader account={timelineAccount} type={'self'} />
+          } else if (type === 'hashtag') {
+            header = <HashtagHeader name={params.name} />
+          }
+
+          return header
+        },
+        Footer: () =>
+          hasMore && (
+            <div style={{ paddingBottom: '1rem' }}>
+              <Spinner />
+            </div>
+          )
+      }}
+      itemContent={index => {
+        const status = statuses[index]
 
         return (
-          <InfiniteLoader
-            isRowLoaded={({ index }) => !!statuses[index]}
-            loadMoreRows={() => load()}
-            rowCount={hasMore ? Number.MAX_VALUE : statuses.length}
-          >
-            {({ onRowsRendered, registerChild }) => (
-              <List
-                onRowsRendered={onRowsRendered}
-                ref={ref => {
-                  listRef.current = ref
-                  registerChild(ref)
-                }}
-                width={width}
-                height={height}
-                rowHeight={cache.rowHeight}
-                overscanRowCount={3}
-                isScrollingOptOut
-                noRowsRenderer={() =>
-                  error ? (
-                    <>
-                      {header}
-                      <NonIdealState
-                        icon='error'
-                        title='Error fetching timeline'
-                        action={
-                          <Button
-                            intent={Intent.PRIMARY}
-                            onClick={() => load(true)}
-                          >
-                            Try again
-                          </Button>
-                        }
-                      />
-                    </>
-                  ) : (
-                    <NonIdealState
-                      icon='clean'
-                      title='Looking a little empty here…'
-                      description='No statuses'
-                    />
-                  )
-                }
-                rowRenderer={({ index, key, style, parent }) => {
-                  const status = statuses[index]
-
-                  return (
-                    <CellMeasurer
-                      key={key}
-                      rowIndex={index}
-                      parent={parent}
-                      cache={cache}
-                      columnIndex={0}
-                    >
-                      <div style={style}>
-                        <StatusWrapper>
-                          {index === 0 && (
-                            <HeaderWrapper>{header}</HeaderWrapper>
-                          )}
-
-                          <Status
-                            status={status}
-                            mutateStatus={mutatedStatus =>
-                              mutateStatus(mutatedStatus)
-                            }
-                          />
-                        </StatusWrapper>
-                      </div>
-                    </CellMeasurer>
-                  )
-                }}
-                rowCount={statuses.length}
-              />
-            )}
-          </InfiniteLoader>
+          <StatusWrapper>
+            <Status
+              status={status}
+              mutateStatus={mutatedStatus => mutateStatus(mutatedStatus)}
+            />
+          </StatusWrapper>
         )
       }}
-    </AutoSizer>
+    />
   )
 }
 

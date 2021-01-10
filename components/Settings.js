@@ -37,10 +37,12 @@ function uuidv4 () {
 function validateInput(regex, currentValue, newValue) {
   if(currentValue.includes('http://')){
     const item = currentValue.replace(regex, newValue)
-    return item;
+    return item
+  } else if(currentValue.includes('https://')){
+    return currentValue
   } else {
     const item = ('https://' + currentValue)
-    return item;
+    return item
   }
 }
 
@@ -55,7 +57,7 @@ const Settings = props => {
   const [enableTextRenderer, setEnableTextRenderer] = usePreference(
     'enableTextRenderer'
   )
-  const [profileTheme, setProfileTheme] = usePreference('profileTheme')
+  const [displayHeaderImage, setDisplayHeaderImage] = usePreference('displayHeaderImage')
 
   return (
     <Container>
@@ -150,15 +152,11 @@ const Settings = props => {
       <H2>Settings</H2>
       <Card style={{ marginBottom: '1rem' }}>
         <H5>Display settings</H5>
-        <RadioGroup
-          label='Profile theme'
-          selectedValue={profileTheme}
-          onChange={e => setProfileTheme(e.target.value)}
-        >
-          <Radio label='Twitter' value='twitter' />
-          <Radio label='Instagram' value='instagram' />
-        </RadioGroup>
-
+        <Switch 
+          label='Display User Header Images'
+          checked={displayHeaderImage}
+          onChange={() => setDisplayHeaderImage(!displayHeaderImage)}
+        />
         <Switch
           label='Only show posts with media'
           checked={onlyMedia}

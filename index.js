@@ -15,7 +15,7 @@ render(
       onlyMedia: false,
       enableBackgroundBlur: true,
       enableTextRenderer: true,
-      profileTheme: 'twitter'
+      displayHeaderImage: true,
     }}
   >
     <App />

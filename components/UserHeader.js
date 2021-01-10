@@ -3,11 +3,14 @@ import { useContext, useEffect, useState } from 'preact/hooks'
 import Avatar from './Avatar'
 import HtmlRenderer from './HtmlRenderer'
 import RouterLink from './RouterLink'
+import { usePreference } from '../prefs'
 import { MastodonInstance } from '../mastodon'
+import gradient from 'random-gradient'
 import styled from 'styled-components'
 
 const Header = styled.header`
-  width: 100%;
+  height: auto;
+  max-width: var(--containerWidth);
   padding: 1rem;
   display: flex;
   align-items: flex-start;
@@ -15,6 +18,22 @@ const Header = styled.header`
   margin: 0 auto;
   box-shadow: 0px 2.5px 2px -3px var(--shadowColor);
   overflow: hidden;
+`
+
+const HeaderImage = styled.div`
+  width: var(--containerWidth);
+  height: 200px;
+  background: ${props => 
+    { if(props.bgImage == "https://mastodon.online/headers/original/missing.png"){
+      return props.bgGradient
+    } else {
+      return `url(${props.bgImage})`
+    }}
+  };
+  background-size: cover;
+  background-position: center;
+  background-repeat: none;
+  margin: 0 auto;
 `
 
 const Username = styled.h2`
@@ -73,7 +92,9 @@ const AvatarWrapper = styled.div`
 `
 
 const UserHeader = props => {
-  if (!props.account) return <div style='height:250px' />
+  if (!props.account) return null
+
+  const [displayHeaderImage] = usePreference('displayHeaderImage')
 
   const {
     avatar,
@@ -85,11 +106,15 @@ const UserHeader = props => {
     displayName,
     note,
     bot,
-    url
+    url,
+    id
   } = props.account
+
+  const gradientVar = gradient(id)
 
   return (
     <div>
+      { displayHeaderImage && <HeaderImage bgImage={headerStatic} bgGradient={gradientVar}/> }
       <Header>
         <AvatarWrapper>
           <Avatar size={125} account={props.account} />

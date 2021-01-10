@@ -1,6 +1,7 @@
 import '/node_modules/flickity/dist/flickity.css'
 import '../../assets/flickity-reset.css'
 
+import { Button, Classes, Colors, Icon } from '@blueprintjs/core'
 import { StatusAudio, StatusImage, StatusVideo } from './renderers'
 import { useEffect, useRef, useState } from 'preact/hooks'
 
@@ -29,6 +30,18 @@ const MediaWrapper = styled.div`
     .flickity-viewport {
       height: 100% !important;
     }
+  }
+`
+
+const SensitiveWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  > .${Classes.ICON} {
+    color: ${Colors.GRAY1};
+    margin: 1rem;
   }
 `
 
@@ -70,9 +83,26 @@ const renderMedia = media => {
 
 const MediaRenderer = props => {
   const { status } = props
-  const { mediaAttachments } = status
+  const { mediaAttachments, sensitive } = status
 
   const [enableTextRenderer] = usePreference('enableTextRenderer')
+  const [hidden, setHidden] = useState(sensitive)
+
+  // TODO content warnings for text renderer
+
+  if (hidden) {
+    return (
+      <MediaWrapper>
+        <SensitiveWrapper>
+          <Icon icon='eye-off' iconSize={42} />
+
+          <Button outline icon='eye-open' onClick={() => setHidden(false)}>
+            View sensitive content
+          </Button>
+        </SensitiveWrapper>
+      </MediaWrapper>
+    )
+  }
 
   if (mediaAttachments.length === 0 && enableTextRenderer) {
     return (
