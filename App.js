@@ -25,7 +25,7 @@ const Wrapper = styled.div`
 
   main {
     height: calc(100vh - ${props => (props.isSubPage ? 50 : 100)}px);
-    margin-top: 1.25rem;
+    div[data-index="0"]:first-of-type{ margin-top: 1.25rem; }
   }
   .bp3-panel-stack {
     height: 100%;
