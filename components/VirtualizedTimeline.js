@@ -24,6 +24,9 @@ const HeaderSpacer = styled.div`
   height: 1rem;
 `
 
+// TODO use context to hold/mutate statuses? Mutation is broken.
+// e.g. if we expand a content warning, then like the post below it,
+// the content warning collapses!
 const VirtualizedTimeline = props => {
   const { params } = props
   const { type } = params

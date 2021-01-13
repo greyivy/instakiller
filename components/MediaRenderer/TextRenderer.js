@@ -29,18 +29,6 @@ const textFitWrapperStyle = css`
 
   display: ${props => (props.overflow ? 'block' : 'flex')};
 
-  ${props =>
-    props.overflow &&
-    css`
-      ::after {
-        content: '...';
-        position: absolute;
-        left: 0;
-        bottom: 1rem;
-        width: 100%;
-      }
-    `}
-
   // If flex...
   // HACK: ensures text is cut off cleanly when text is too long
   column-width: 100vw;
