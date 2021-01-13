@@ -1,4 +1,12 @@
-import { Button, Classes, Collapse, Icon, Intent } from '@blueprintjs/core'
+import {
+  Button,
+  Classes,
+  Collapse,
+  Icon,
+  Intent,
+  Menu,
+  Spinner
+} from '@blueprintjs/core'
 import { useCallback, useContext, useState } from 'preact/hooks'
 
 import HtmlRenderer from '../HtmlRenderer'
@@ -26,27 +34,25 @@ const CaptionButtons = styled.div`
 `
 
 const SpoilerText = styled.a`
-  display: block;
-  font-weight: 600;
+  display: inline-block;
   margin-bottom: 0.5rem;
 `
 
+const StatusPadding = styled.div`
+  padding-bottom: 1rem;
+`
+
 const Status = props => {
-  const { status: originalStatus } = props
+  const { status: originalStatus, mutateStatus, removeStatus } = props
 
-  const { masto } = useContext(MastodonInstance)
-
-  let rebloggedStatus = originalStatus
-
-  // Get deepest reblog
-  // TODO do we need to recurse down the tree or can there only be one level?
-  let isReblog = false
-  while (rebloggedStatus.reblog) {
-    rebloggedStatus = rebloggedStatus.reblog
-    isReblog = true
+  const { masto, user } = useContext(MastodonInstance)
+  if (!masto || !user) {
+    return null
   }
 
-  const displayStatus = isReblog ? rebloggedStatus : originalStatus
+  const status = originalStatus.reblog || originalStatus
+  const isReblog = status.id !== originalStatus.id
+  const isSelf = user.id === status.account.id
 
   const {
     account,
@@ -57,14 +63,41 @@ const Status = props => {
     reblogged,
     reblogsCount,
     bookmarked,
-    spoilerText
-  } = displayStatus
-
-  const [expanded, setExpanded] = useState(false) // TODO pref
+    spoilerText,
+    showSpoilerText,
+    url,
+    application
+  } = status
+  const host = new URL(url).host
 
   const [favouriteLoading, setFavouriteLoading] = useState(false)
   const [reblogLoading, setReblogLoading] = useState(false)
   const [bookmarkLoading, setBookmarkLoading] = useState(false)
+
+  const mutateStatusInPlace = useCallback(
+    mutation => {
+      const mutatedStatus = {
+        ...status,
+        ...mutation
+      }
+
+      mutateStatus(mutatedStatus)
+      return mutatedStatus
+    },
+    [status]
+  )
+
+  const removeSelf = useCallback(async () => {
+    try {
+      await masto.removeStatus(status.id)
+
+      removeStatus(status.id)
+
+      toaster.show({ message: 'Status removed', intent: Intent.SUCCESS })
+    } catch (e) {
+      toaster.show({ message: e.message, intent: Intent.DANGER })
+    }
+  }, [])
 
   const toggleFavourite = useCallback(async () => {
     setFavouriteLoading(true)
@@ -73,148 +106,205 @@ const Status = props => {
       if (favourited) {
         // When favouriteStatus/unfavouriteStatus is called, the function returns an updated
         // status object. We pass this to the parent component and update the state there.
-        const mutatedStatus = await masto.unfavouriteStatus(displayStatus.id)
+        const mutatedStatus = await masto.unfavouriteStatus(status.id)
 
-        // Ensure these values are actually updated... Mastodon doesn't always do so
-        mutatedStatus.favourited = false
-        mutatedStatus.favouritesCount = favouritesCount - 1
-        props.mutateStatus(mutatedStatus)
+        mutateStatusInPlace({
+          ...mutatedStatus,
+          // Ensure these values are actually updated... Mastodon doesn't always do so
+          favourited: false,
+          favouritesCount: favouritesCount - 1
+        })
       } else {
-        const mutatedStatus = await masto.favouriteStatus(displayStatus.id)
+        const mutatedStatus = await masto.favouriteStatus(status.id)
 
-        mutatedStatus.favourited = true
-        mutatedStatus.favouritesCount = favouritesCount + 1
-
-        props.mutateStatus(mutatedStatus)
+        mutateStatusInPlace({
+          ...mutatedStatus,
+          favourited: true,
+          favouritesCount: favouritesCount + 1
+        })
       }
     } catch (e) {
       toaster.show({ message: e.message, intent: Intent.DANGER })
     } finally {
       setFavouriteLoading(false)
     }
-  }, [favourited])
+  }, [favourited, status])
 
   const toggleReblog = useCallback(async () => {
     setReblogLoading(true)
 
     try {
       if (reblogged) {
-        const mutatedStatus = await masto.unreblogStatus(displayStatus.id)
+        const mutatedStatus = await masto.unreblogStatus(status.id)
 
-        mutatedStatus.reblogged = false
-        mutatedStatus.reblogsCount = reblogsCount - 1
-
-        props.mutateStatus(mutatedStatus)
+        mutateStatusInPlace({
+          ...mutatedStatus,
+          reblogged: false,
+          reblogsCount: reblogsCount - 1
+        })
       } else {
-        const mutatedStatus = (await masto.reblogStatus(displayStatus.id))
-          .reblog
+        const mutatedStatus = (await masto.reblogStatus(status.id)).reblog
 
-        mutatedStatus.reblogged = true
-        mutatedStatus.reblogsCount = reblogsCount + 1
-
-        props.mutateStatus(mutatedStatus)
+        mutateStatusInPlace({
+          ...mutatedStatus,
+          reblogged: true,
+          reblogsCount: reblogsCount + 1
+        })
       }
     } catch (e) {
       toaster.show({ message: e.message, intent: Intent.DANGER })
     } finally {
       setReblogLoading(false)
     }
-  }, [reblogged])
+  }, [reblogged, status])
 
   const toggleBookmark = useCallback(async () => {
     setBookmarkLoading(true)
 
     try {
       if (bookmarked) {
-        const mutatedStatus = await masto.unbookmarkStatus(displayStatus.id)
+        const mutatedStatus = await masto.unbookmarkStatus(status.id)
 
-        mutatedStatus.bookmarked = false
-
-        props.mutateStatus(mutatedStatus)
+        mutateStatusInPlace({
+          ...mutatedStatus,
+          bookmarked: false
+        })
       } else {
-        const mutatedStatus = await masto.bookmarkStatus(displayStatus.id)
+        const mutatedStatus = await masto.bookmarkStatus(status.id)
 
-        mutatedStatus.bookmarked = true
-
-        props.mutateStatus(mutatedStatus)
+        mutateStatusInPlace({
+          ...mutatedStatus,
+          bookmarked: true
+        })
       }
     } catch (e) {
       toaster.show({ message: e.message, intent: Intent.DANGER })
     } finally {
       setBookmarkLoading(false)
     }
-  }, [bookmarked])
+  }, [bookmarked, status])
 
   const renderedContent = content && (
-    <HtmlRenderer content={content} context={displayStatus} />
+    <HtmlRenderer content={content} context={status} />
   )
 
+  const menuItems = [
+    <Menu.Item
+      href={url}
+      target='_blank'
+      rel='noopener'
+      key='view'
+      text={`View on ${host}`}
+    />
+  ]
+
+  if (isSelf) {
+    menuItems.push(<Menu.Divider key='divider' />)
+    menuItems.push(
+      <Menu.Item
+        key='remove'
+        text='Remove'
+        icon='trash'
+        onClick={() => removeSelf()}
+      />
+    )
+  }
+
   return (
-    <StatusContainer
-      account={displayStatus.account}
-      secondaryAccount={isReblog && originalStatus.account}
-    >
-      <MediaRenderer status={displayStatus} />
+    <StatusPadding>
+      <StatusContainer
+        account={status.account}
+        secondaryAccount={isReblog && originalStatus.account}
+        menu={<Menu>{menuItems}</Menu>}
+      >
+        <MediaRenderer
+          status={status}
+          mutateStatusInPlace={mutateStatusInPlace}
+        />
 
-      <CaptionWrapper>
-        <CaptionButtons>
-          <Button
-            minimal
-            icon={favourited ? 'star' : 'star-empty'}
-            title='Favorite'
-            intent={favourited ? Intent.WARNING : Intent.NONE}
-            onClick={() => toggleFavourite()}
-            loading={favouriteLoading}
-          >
-            {favouritesCount}
-          </Button>
-          <Button
-            minimal
-            icon='refresh'
-            title='Boost'
-            intent={reblogged ? Intent.PRIMARY : Intent.NONE}
-            onClick={() => toggleReblog()}
-            loading={reblogLoading}
-          >
-            {reblogsCount}
-          </Button>
-
-          <div style={{ float: 'right' }} title='Bookmark'>
+        <CaptionWrapper>
+          <CaptionButtons>
             <Button
               minimal
-              icon='bookmark'
-              title='Bookmark'
-              intent={bookmarked ? Intent.PRIMARY : Intent.NONE}
-              onClick={() => toggleBookmark()}
-              loading={bookmarkLoading}
-            ></Button>
-          </div>
-        </CaptionButtons>
+              icon={favourited ? 'star' : 'star-empty'}
+              title='Favorite'
+              intent={favourited ? Intent.WARNING : Intent.NONE}
+              onClick={() => toggleFavourite()}
+              loading={favouriteLoading}
+            >
+              {favouritesCount}
+            </Button>
+            <Button
+              minimal
+              icon='refresh'
+              title='Boost'
+              intent={reblogged ? Intent.PRIMARY : Intent.NONE}
+              onClick={() => toggleReblog()}
+              loading={reblogLoading}
+            >
+              {reblogsCount}
+            </Button>
 
-        <CaptionHeader>
-          <Mention account={account} />{' '}
-          <ReactTimeAgo
-            className={Classes.TEXT_MUTED}
-            date={Date.parse(createdAt)}
-            locale='en-US'
-            //timeStyle='twitter' // For comments
-          />
-        </CaptionHeader>
+            <div style={{ float: 'right' }} title='Bookmark'>
+              <Button
+                minimal
+                icon='bookmark'
+                title='Bookmark'
+                intent={bookmarked ? Intent.DANGER : Intent.NONE}
+                onClick={() => toggleBookmark()}
+                loading={bookmarkLoading}
+              ></Button>
+            </div>
+          </CaptionButtons>
 
-        {spoilerText ? (
-          <>
-            <SpoilerText onClick={() => setExpanded(!expanded)}>
-              {spoilerText}{' '}
-              <Icon icon={expanded ? 'chevron-up' : 'chevron-down'} />
-            </SpoilerText>
+          <CaptionHeader>
+            <Mention account={account} />{' '}
+            <ReactTimeAgo
+              className={Classes.TEXT_MUTED}
+              date={Date.parse(createdAt)}
+              locale='en-US'
+              //timeStyle='twitter' // For comments
+            />
+            {application && application.website && (
+              <span className={Classes.TEXT_MUTED}>
+                {' via '}
+                <a
+                  className='link-plain'
+                  href={application.website}
+                  target='_blank'
+                  rel='noopener'
+                >
+                  {application.name}
+                </a>
+              </span>
+            )}
+          </CaptionHeader>
 
-            {expanded && renderedContent}
-          </>
-        ) : (
-          renderedContent
-        )}
-      </CaptionWrapper>
-    </StatusContainer>
+          {spoilerText ? (
+            <>
+              <SpoilerText
+                className='link-plain'
+                href='#'
+                onClick={e => {
+                  e.preventDefault()
+                  mutateStatusInPlace({ showSpoilerText: !showSpoilerText })
+                }}
+              >
+                {spoilerText}
+                <Icon
+                  style={{ marginLeft: '0.1rem' }}
+                  icon={showSpoilerText ? 'chevron-up' : 'chevron-down'}
+                />
+              </SpoilerText>
+
+              {showSpoilerText && renderedContent}
+            </>
+          ) : (
+            renderedContent
+          )}
+        </CaptionWrapper>
+      </StatusContainer>
+    </StatusPadding>
   )
 }
 

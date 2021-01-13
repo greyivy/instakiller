@@ -7,17 +7,21 @@ import HashtagHeader from './HashtagHeader'
 import Status from './Status'
 import UserHeader from './UserHeader'
 import { Virtuoso } from 'react-virtuoso'
+import history from 'history/browser'
 import styled from 'styled-components'
 import toaster from './toaster'
 import { usePreference } from '../prefs'
 
+const DEFAULT_STATUS_HEIGHT = 800
+
 const StatusWrapper = styled.div`
   max-width: var(--containerWidth);
-  margin: auto;
+  margin: 0 auto;
+  overflow: hidden;
 `
 
-const HeaderWrapper = styled.div`
-  margin-bottom: 1rem;
+const HeaderSpacer = styled.div`
+  height: 1rem;
 `
 
 const VirtualizedTimeline = props => {
@@ -81,7 +85,7 @@ const VirtualizedTimeline = props => {
   // Scroll to top event listener
   useEffect(() => {
     function scrollTop () {
-      listRef.current.base.scrollTo({ top: 0, behavior: 'smooth' })
+      listRef.current.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
     document.addEventListener('scrollTop', scrollTop, false)
@@ -151,18 +155,27 @@ const VirtualizedTimeline = props => {
     )
     if (index !== -1) {
       // Mutate status
-      // Note: we specifically need to use Object.assign here
-      // to keep the reference to the old status so the List
-      // knows to rerender. mutatedStatuses[index] = mutatedStatus
-      // DOES NOT WORK
-      Object.assign(mutatedStatuses[index], mutatedStatus)
+      mutatedStatuses[index] = { ...mutatedStatuses[index], ...mutatedStatus }
     }
     if (rebloggedIndex !== -1) {
       // Mutate reblog
-      Object.assign(mutatedStatuses[rebloggedIndex].reblog, mutatedStatus)
+      mutatedStatuses[rebloggedIndex].reblog = {
+        ...mutatedStatuses[rebloggedIndex].reblog,
+        ...mutatedStatus
+      }
     }
 
     setStatuses(mutatedStatuses)
+  }
+
+  const removeStatus = id => {
+    setStatuses(
+      statuses.filter(status => {
+        if (status.id === id) return false
+        if (status.reblog && status.reblog.id === id) return false
+        return true
+      })
+    )
   }
 
   const isLoading = isInitialTimelineLoading || isAccountLoading
@@ -171,14 +184,13 @@ const VirtualizedTimeline = props => {
 
   return (
     <Virtuoso
+      ref={listRef}
       style={{ height: '100%' }}
-      totalCount={statuses.length}
+      data={statuses}
+      defaultItemHeight={DEFAULT_STATUS_HEIGHT}
       endReached={() => load()}
-      overscan={{
-        // 800px is the average height of a post...
-        main: 800 * 4, // ...so overscan 4 posts going forward...
-        reverse: 800 * 8 // ...and 8 going backward
-      }}
+      computeItemKey={index => statuses[index].id}
+      overscan={DEFAULT_STATUS_HEIGHT * 8}
       components={{
         Header: () => {
           let header = null
@@ -188,6 +200,8 @@ const VirtualizedTimeline = props => {
             header = <UserHeader account={timelineAccount} type={'self'} />
           } else if (type === 'hashtag') {
             header = <HashtagHeader name={params.name} />
+          } else {
+            header = <HeaderSpacer />
           }
 
           return header
@@ -207,6 +221,7 @@ const VirtualizedTimeline = props => {
             <Status
               status={status}
               mutateStatus={mutatedStatus => mutateStatus(mutatedStatus)}
+              removeStatus={id => removeStatus(id)}
             />
           </StatusWrapper>
         )
@@ -215,10 +230,66 @@ const VirtualizedTimeline = props => {
   )
 }
 
-const VirtualizedTimelineWrapper = props => (
-  <MastodonInstanceWrapper account={props.account}>
-    <VirtualizedTimeline {...props} />
-  </MastodonInstanceWrapper>
-)
+const VirtualizedTimelineWrapper = props => {
+  const { isLoading, error } = useContext(MastodonInstance)
 
-export default VirtualizedTimelineWrapper
+  useEffect(() => {
+    if (error) {
+      toaster.show({ message: error.message, intent: Intent.DANGER })
+    }
+  }, [error])
+
+  if (isLoading) {
+    return <CenteredSpinner />
+  }
+
+  if (error) {
+    return (
+      <NonIdealState
+        icon='error'
+        title='Error connecting to instance'
+        description='Please check your credentials and verify that the instance is up'
+        action={
+          <>
+            <Button intent={Intent.PRIMARY} onClick={() => login()}>
+              Try again
+            </Button>
+            <a href={uri} target='_blank' rel='noopener'>
+              View instance
+            </a>
+          </>
+        }
+      />
+    )
+  }
+
+  return <VirtualizedTimeline {...props} />
+}
+
+export default props => {
+  const { account } = props
+
+  if (!account) {
+    return (
+      <NonIdealState
+        icon='user'
+        title='No account'
+        description='Please add a Mastodon account before continuing'
+        action={
+          <Button
+            intent={Intent.PRIMARY}
+            onClick={() => history.replace('/settings')}
+          >
+            Add account
+          </Button>
+        }
+      />
+    )
+  }
+
+  return (
+    <MastodonInstanceWrapper account={account}>
+      <VirtualizedTimelineWrapper {...props} />
+    </MastodonInstanceWrapper>
+  )
+}

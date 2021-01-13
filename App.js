@@ -5,15 +5,17 @@ import {
   Intent,
   Menu,
   Navbar,
-  NonIdealState,
   PanelStack,
   Popover,
   Position
 } from '@blueprintjs/core'
-import { useEffect, useState } from 'preact/hooks'
+import { MastodonInstance, MastodonInstanceWrapper } from './mastodon'
+import { useContext, useEffect, useState } from 'preact/hooks'
 
 import { Action } from 'history'
+import Avatar from './components/Avatar'
 import Settings from './components/Settings'
+import Tooter from './components/Tooter'
 import VirtualizedTimeline from './components/VirtualizedTimeline'
 import history from 'history/browser'
 import { match } from 'path-to-regexp'
@@ -26,10 +28,10 @@ const Wrapper = styled.div`
   main {
     height: calc(100vh - ${props => (props.isSubPage ? 50 : 100)}px);
   }
-  .bp3-panel-stack {
+  .${Classes.PANEL_STACK} {
     height: 100%;
 
-    .bp3-panel-stack-view {
+    .${Classes.PANEL_STACK_VIEW} {
       background: var(--bg);
     }
   }
@@ -40,6 +42,14 @@ const SlidingNavBar = styled(Navbar)`
   bottom: 0;
   transform: ${props => (props.visible ? 'translateY(50px);' : 'none')};
   transition: 0.5s all cubic-bezier(0.165, 0.84, 0.44, 1);
+
+  .${Classes.BUTTON} {
+    margin: 0 4px;
+  }
+
+  .${Classes.NAVBAR_GROUP} {
+    justify-content: space-evenly;
+  }
 `
 
 const routes = [
@@ -84,9 +94,22 @@ const routes = [
 // Determines if current browser location matches a specific route
 const isMatch = path => match(path)(location.pathname)
 
+const UserProfileAvatar = props => {
+  const { user } = useContext(MastodonInstance)
+
+  return <Avatar account={user} size={24} />
+}
+const UserProfileIcon = props => (
+  <MastodonInstanceWrapper account={props.account}>
+    <UserProfileAvatar />
+  </MastodonInstanceWrapper>
+)
+
 function App (props) {
   const [accounts] = usePreference('accounts')
   const [currentAccount, setCurrentAccount] = useState(accounts[0])
+
+  const [isTooting, setIsTooting] = useState(false)
 
   // Gets a panel (component and props) for a specific route
   const getRoutePanel = path => {
@@ -243,16 +266,22 @@ function App (props) {
           showPanelHeader={false}
           stack={panels}
         />
+
+        <Tooter
+          account={currentAccount}
+          isOpen={isTooting}
+          onClose={() => setIsTooting(false)}
+        />
       </main>
       <SlidingNavBar visible={isSubPage}>
-        <Navbar.Group align={null} style={{ justifyContent: 'space-evenly' }}>
+        <Navbar.Group align={null}>
           <Button
             minimal
             fill
             icon='home'
             title='Following'
             onClick={() => home()}
-            intent={isMatch('/') ? 'primary' : ''}
+            intent={isMatch('/') ? Intent.PRIMARY : Intent.NONE}
           />
           <Button
             minimal
@@ -260,7 +289,15 @@ function App (props) {
             icon='people'
             title='Local timeline'
             onClick={() => history.replace('/timeline/local')}
-            intent={isMatch('/timeline/local') ? 'primary' : ''}
+            intent={isMatch('/timeline/local') ? Intent.PRIMARY : Intent.NONE}
+          />
+          <Button
+            intent={Intent.PRIMARY}
+            fill
+            icon='plus'
+            title='Compose toot'
+            onClick={() => setIsTooting(!isTooting)}
+            active={isTooting}
           />
           <Button
             minimal
@@ -268,23 +305,17 @@ function App (props) {
             icon='globe-network'
             title='Federated timeline'
             onClick={() => history.replace('/timeline/federated')}
-            intent={isMatch('/timeline/federated') ? 'primary' : ''}
+            intent={
+              isMatch('/timeline/federated') ? Intent.PRIMARY : Intent.NONE
+            }
           />
           <Button
             minimal
             fill
-            icon='user'
+            icon={<UserProfileIcon account={currentAccount} />}
             title='Profile'
             onClick={() => history.replace('/user')}
-            intent={isMatch('/user') ? 'primary' : ''}
-          />
-          <Button
-            minimal
-            fill
-            icon='settings'
-            title='Settings'
-            onClick={() => history.replace('/settings')}
-            intent={isMatch('/settings') ? 'primary' : ''}
+            intent={isMatch('/user') ? Intent.PRIMARY : Intent.NONE}
           />
         </Navbar.Group>
       </SlidingNavBar>

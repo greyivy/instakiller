@@ -16,6 +16,7 @@ render(
       enableBackgroundBlur: true,
       enableTextRenderer: true,
       displayHeaderImage: true,
+      showAllSensitiveMedia: false // TODO settings
     }}
   >
     <App />

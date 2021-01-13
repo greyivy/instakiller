@@ -2,14 +2,15 @@ import { useContext, useEffect, useState } from 'preact/hooks'
 
 import Avatar from './Avatar'
 import HtmlRenderer from './HtmlRenderer'
-import RouterLink from './RouterLink'
-import { usePreference } from '../prefs'
 import { MastodonInstance } from '../mastodon'
+import RouterLink from './RouterLink'
 import gradient from 'random-gradient'
 import styled from 'styled-components'
+import { usePreference } from '../prefs'
 
 const Header = styled.header`
   height: auto;
+  width: 100%;
   max-width: var(--containerWidth);
   padding: 1rem;
   display: flex;
@@ -21,7 +22,8 @@ const Header = styled.header`
 `
 
 const HeaderImage = styled.div`
-  width: var(--containerWidth);
+  width: 100%;
+  max-width: var(--containerWidth);
   height: 200px;
   background: ${props => 
     { if(props.bgImage == "https://mastodon.online/headers/original/missing.png"){
@@ -119,7 +121,7 @@ const UserHeader = props => {
         <AvatarWrapper>
           <Avatar size={125} account={props.account} />
           {props.type === 'self'  && 
-            <RouterLink href="/settings" className="settings">Settings</RouterLink>
+            <RouterLink push href="/settings" className="settings">Settings</RouterLink>
           }
         </AvatarWrapper>
         <UserData>

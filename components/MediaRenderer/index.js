@@ -35,13 +35,19 @@ const MediaWrapper = styled.div`
 
 const SensitiveWrapper = styled.div`
   display: flex;
+  text-align: center;
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  padding: 4rem;
 
   > .${Classes.ICON} {
     color: ${Colors.GRAY1};
-    margin: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  > div {
+    margin-bottom: 1.5rem;
   }
 `
 
@@ -81,72 +87,101 @@ const renderMedia = media => {
   }
 }
 
+const SensitiveRenderer = props => (
+  <MediaWrapper>
+    <SensitiveWrapper>
+      <Icon icon='eye-off' iconSize={56} />
+
+      {props.content && (
+        <div className={Classes.TEXT_LARGE}>{props.content}</div>
+      )}
+
+      <Button outlined large icon='eye-open' onClick={() => props.onClick()}>
+        View content
+      </Button>
+    </SensitiveWrapper>
+  </MediaWrapper>
+)
+
 const MediaRenderer = props => {
-  const { status } = props
-  const { mediaAttachments, sensitive } = status
+  const { status, mutateStatusInPlace } = props
+  const {
+    mediaAttachments,
+    sensitive,
+    spoilerText,
+    showSpoilerText,
+    showSensitiveMedia
+  } = status
 
   const [enableTextRenderer] = usePreference('enableTextRenderer')
-  const [hidden, setHidden] = useState(sensitive)
-
-  // TODO content warnings for text renderer
-
-  if (hidden) {
-    return (
-      <MediaWrapper>
-        <SensitiveWrapper>
-          <Icon icon='eye-off' iconSize={42} />
-
-          <Button outline icon='eye-open' onClick={() => setHidden(false)}>
-            View sensitive content
-          </Button>
-        </SensitiveWrapper>
-      </MediaWrapper>
-    )
-  }
+  const [showAllSensitiveMedia] = usePreference('showAllSensitiveMedia')
 
   if (mediaAttachments.length === 0 && enableTextRenderer) {
+    if (spoilerText && !showSpoilerText) {
+      return (
+        <SensitiveRenderer
+          onClick={() =>
+            mutateStatusInPlace({ showSpoilerText: !showSpoilerText })
+          }
+          content={spoilerText}
+        />
+      )
+    }
+
     return (
       <MediaWrapper>
         <TextRenderer status={status} />
       </MediaWrapper>
     )
-  } else if (mediaAttachments.length === 1) {
-    return <MediaWrapper>{renderMedia(mediaAttachments[0])}</MediaWrapper>
-  } else if (mediaAttachments.length > 0) {
-    const [flickityIndex, setFlickityIndex] = useState(0)
-    const flickityRef = useRef(null)
+  } else {
+    if (sensitive && !showSensitiveMedia && !showAllSensitiveMedia) {
+      return (
+        <SensitiveRenderer
+          onClick={() =>
+            mutateStatusInPlace({ showSensitiveMedia: !showSensitiveMedia })
+          }
+        />
+      )
+    }
 
-    useEffect(() => {
-      if (flickityRef.current) {
-        flickityRef.current.on('change', () => {
-          const { selectedIndex } = flickityRef.current
-          setFlickityIndex(selectedIndex)
-        })
+    if (mediaAttachments.length === 1) {
+      return <MediaWrapper>{renderMedia(mediaAttachments[0])}</MediaWrapper>
+    } else if (mediaAttachments.length > 0) {
+      const [flickityIndex, setFlickityIndex] = useState(0)
+      const flickityRef = useRef(null)
 
-        return () => {
-          flickityRef.current.off('change')
+      useEffect(() => {
+        if (flickityRef.current) {
+          flickityRef.current.on('change', () => {
+            const { selectedIndex } = flickityRef.current
+            setFlickityIndex(selectedIndex)
+          })
+
+          return () => {
+            flickityRef.current.off('change')
+          }
         }
-      }
-    }, [flickityRef.current])
+      }, [flickityRef.current])
 
-    return (
-      <MediaWrapper>
-        <FlickityCounter>
-          {flickityIndex + 1}/{mediaAttachments.length}
-        </FlickityCounter>
-        <Flickity
-          className={FLICKITY_CLASSNAME}
-          elementType='div'
-          flickityRef={ref => {
-            flickityRef.current = ref
-          }}
-        >
-          {mediaAttachments.map(media => (
-            <FlickitySlide key={media.id}>{renderMedia(media)}</FlickitySlide>
-          ))}
-        </Flickity>
-      </MediaWrapper>
-    )
+      return (
+        <MediaWrapper>
+          <FlickityCounter>
+            {flickityIndex + 1}/{mediaAttachments.length}
+          </FlickityCounter>
+          <Flickity
+            className={FLICKITY_CLASSNAME}
+            elementType='div'
+            flickityRef={ref => {
+              flickityRef.current = ref
+            }}
+          >
+            {mediaAttachments.map(media => (
+              <FlickitySlide key={media.id}>{renderMedia(media)}</FlickitySlide>
+            ))}
+          </Flickity>
+        </MediaWrapper>
+      )
+    }
   }
 }
 
